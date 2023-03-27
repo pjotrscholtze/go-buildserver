@@ -32,7 +32,11 @@ func (m *mock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	path := "../../example/config.yaml"
+	if len(os.Args) != 2 {
+		println("Usage: app <config-path.yaml>")
+		return
+	}
+	path := os.Args[1]
 	log.Println("Starting buildserver")
 
 	log.Printf("Loading config: %s\n", path)
