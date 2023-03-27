@@ -1,11 +1,17 @@
-FROM golang:1.19.4-alpine
+# Build
+FROM golang:alpine as builder
+RUN mkdir /app
 WORKDIR /app
-
-COPY go.mod ./
-COPY go.sum ./
+ADD go.mod .
 RUN go mod download
+ADD . /app
+RUN CGO_ENABLED=0 GOOS=linux go build -a -o go-buildserver ./cmd/go-buildserver/main.go
 
-COPY ./models ./models
-COPY ./restapi ./restapi
-COPY ./cmd ./cmd
-RUN go build -o /go-buildserver ./cmd/go-buildserver
+RUN find /
+
+# Run
+FROM alpine:latest
+WORKDIR /app
+COPY --from=builder /app/go-buildserver .
+Expose 8000
+CMD ["./go-buildserver"]
