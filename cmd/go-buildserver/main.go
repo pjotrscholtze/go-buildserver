@@ -80,6 +80,7 @@ func main() {
 
 	server.ConfigureAPI()
 	server.Port = 3000
+	server.Host = "0.0.0.0"
 
 	t := &mock{
 		next: api.Serve(nil),

@@ -3,7 +3,7 @@ Repos:
 - URL: git@github.com:pjotrscholtze/go-buildserver.git
   Name: Go-Buildserver
   BuildScript: ./build.sh
-  SSHKeyLocation: /home/pjotr/.ssh/github.com
+  SSHKeyLocation: /data/.ssh/github.com
   ForceCleanBuild: True
   Triggers:
   - Kind: Cron

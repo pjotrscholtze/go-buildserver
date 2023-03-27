@@ -237,6 +237,7 @@ func (r *repo) Build(reason string) {
 	_, err = f.WriteString(strings.Join([]string{
 		"#!/bin/sh",
 		"eval `ssh-agent`",
+		"ssh-agent &",
 		"ssh-add " + (*r).repo.SSHKeyLocation,
 		"git clone " + r.repo.URL + " " + gitPath,
 		"chmod +x " + path.Join(gitPath, r.repo.BuildScript),

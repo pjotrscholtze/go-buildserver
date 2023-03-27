@@ -15,6 +15,8 @@ require (
 	golang.org/x/net v0.5.0
 )
 
+require github.com/robfig/cron/v3 v3.0.0
+
 require (
 	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/docker/go-units v0.5.0 // indirect
@@ -25,7 +27,6 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
-	github.com/robfig/cron/v3 v3.0.0 // indirect
 	go.mongodb.org/mongo-driver v1.11.1 // indirect
 	golang.org/x/sys v0.4.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

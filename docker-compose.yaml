@@ -1,0 +1,12 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "3002:3000"
+    volumes:
+      - /home/pjotr/.ssh/:/data/.ssh/:ro
+      - /./example/config.yaml:/data/config.yaml
+      - /home/pjotr/.ssh/known_hosts:/root/.ssh/known_hosts:ro
+    environment:
+      CONFIG_PATH: "/app/example/config.yaml"
