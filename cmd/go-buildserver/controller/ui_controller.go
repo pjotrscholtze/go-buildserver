@@ -8,7 +8,6 @@ import (
 
 func renderUITemplate(path string, data any) bytes.Buffer {
 	t, err := template.ParseFiles(path, "templates/parts/header.html", "templates/parts/footer.html")
-	// .ParseFiles("./views/product.html","./views/header.html","./views/footer.html")
 
 	if err != nil {
 		panic(err)
@@ -22,13 +21,9 @@ func renderUITemplate(path string, data any) bytes.Buffer {
 	}
 	return w
 }
+
 func wrapUITemplate(path string) bytes.Buffer {
 	return renderUITemplate(path, struct{}{})
-	// return renderUITemplate("templates/wrapper.html", struct {
-	// 	Contents string
-	// }{
-	// 	Contents: ui.String(),
-	// })
 }
 
 func RegisterUIController() *http.ServeMux {

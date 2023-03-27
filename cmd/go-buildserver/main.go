@@ -43,15 +43,6 @@ func main() {
 
 	buildRepo := repo.NewBuildRepo(c, cr)
 
-	// cr.AddFunc("* * * * * *", func() {
-	// 	fmt.Println("Every hour on the 2 seconds")
-	// })
-
-	// br.GetRepoByName("Go-Buildserver").Build("dev")
-
-	// https://www.golanglearn.com/golang-tutorials/how-to-schedule-a-cron-job-in-golang/
-	// println(c.Repos[0])
-
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
 	if err != nil {
 		log.Fatalln(err)
@@ -85,9 +76,7 @@ func main() {
 
 	server.ConfigureAPI()
 	server.Port = 3000
-	// api.AddMiddlewareFor("/", "/", func(h http.Handler) http.Handler {
-	// 	return h
-	// })
+
 	t := &mock{
 		next: api.Serve(nil),
 		mux:  controller.RegisterUIController(),

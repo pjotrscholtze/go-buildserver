@@ -35,7 +35,6 @@ func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.BuildRe
 						Time: strfmt.DateTime(line.Time()),
 						Line: line.Line(),
 					})
-
 				}
 				outputLbr = append(outputLbr, &models.BuildResult{
 					Reason:    lbr.Reason(),
@@ -54,6 +53,7 @@ func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.BuildRe
 				LastBuildResult: outputLbr,
 				Triggers:        make([]*models.Trigger, len(triggers)),
 			}
+
 			for y, trigger := range triggers {
 				payload[i].Triggers[y] = &models.Trigger{
 					Kind:     trigger.Kind,
@@ -61,8 +61,10 @@ func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.BuildRe
 				}
 			}
 		}
+
 		return operations.NewListReposOK().WithPayload(payload)
 	})
+
 	api.StartBuildHandler = operations.StartBuildHandlerFunc(func(sbp operations.StartBuildParams) middleware.Responder {
 		buildRepo.GetRepoByName(sbp.Name).Build("HTTP: " + sbp.Reason)
 		return operations.NewStartBuildOK()
