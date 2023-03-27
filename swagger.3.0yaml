@@ -1,0 +1,116 @@
+openapi: 3.0.3
+info:
+  title: Go Buildserver
+  version: 1.0.0
+paths:
+  /repos:
+    get:
+      summary: Get repos
+      operationId: listRepos
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                xml:
+                  name: addresses
+                  wrapped: true
+                items:  
+                  $ref: '#/components/schemas/Repo'
+            application/xml:
+              schema:
+                type: array
+                xml:
+                  name: addresses
+                  wrapped: true
+                items:
+                  $ref: '#/components/schemas/Repo'
+  /repos/{name}:
+    post:
+      summary: Start build
+      description: ''
+      operationId: startBuild
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+          application/xml:
+            schema:
+              type: object
+              additionalProperties: true
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              additionalProperties: true
+        required: true
+      responses:
+        '200':
+          description: Started build
+components:
+  schemas:
+    BuildResultLine:
+      type: object
+      properties:
+        Line:
+          type: string
+        Time:
+          type: string
+          format: date-time
+        Pipe:
+          type: string
+    BuildResult:
+      type: object
+      properties:
+        StartTime:
+          type: string
+          format: date-time
+        Status:
+          type: string
+        Reason:
+          type: string
+        Lines:
+          type: array
+          xml:
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/BuildResultLine'
+    Trigger:
+      type: object
+      properties:
+        Kind:
+          type: string
+        Schedule:
+          type: string
+    Repo:
+      type: object
+      properties:
+        LastBuildResult:
+          type: array
+          xml:
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/BuildResult'
+        URL:
+          type: string
+        Name:
+          type: string
+        BuildScript:
+          type: string
+        ForceCleanBuild:
+          type: boolean
+        Triggers:
+          type: array
+          xml:
+            wrapped: true
+          items:
+            $ref: '#/components/schemas/Trigger'

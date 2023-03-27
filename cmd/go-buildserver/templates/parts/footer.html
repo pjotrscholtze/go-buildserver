@@ -1,0 +1,259 @@
+{{ define "footer" }}
+<script>
+    document.isUpdating = false;
+    document.state = {
+        _state: {},
+        _listeners: {},
+        update: (path, data) => {
+            document.state._state[path] = data;
+            if (document.state._listeners[path] !== undefined ) {
+                document.state._listeners[path].forEach(element => {
+                    element(data);
+                });
+            }
+        },
+        registerListener: (path, fn) => {
+            if (!document.state._listeners.hasOwnProperty(path)) {
+                document.state._listeners[path] = [];
+            }
+            document.state._listeners[path].push(fn);
+        }
+    };
+
+    let routes = {
+        "/repo/": () => {
+            document.state.registerListener("repos", (data) => {
+                let foundData = null;
+                for (let i in data) {
+                    if (window.location.pathname == "/repo/" + data[i].Name) {
+                        foundData = data[i];
+                        break;
+                    }
+                }
+                let copyFoundData = {...foundData};
+
+                let lines = [];
+                let waiting = true;
+                let duration = "NA";
+                if (copyFoundData["LastBuildResult"].length > 0) {
+                    lines = [...copyFoundData["LastBuildResult"][0].Lines];
+                    delete copyFoundData["LastBuildResult"][0].Lines;
+                    waiting = ["FINISHED", "PENDING"].includes(copyFoundData["LastBuildResult"][0].Status);
+                    duration = "" + Date.parse(lines[lines.length - 1].Time) - Date.parse(copyFoundData["LastBuildResult"][0].StartTime) + "ms";
+                }
+                document.getElementById("runner").setAttribute("class", waiting ? "waiting" : "running");
+                if (document.getElementById("runner").onclick == null) {
+                    document.getElementById("runner").onclick = () => {
+                        if (!waiting) return;
+                        document.querySelector("#last-results tbody").innerHTML = "";
+                        fetch("/api/repos/" + foundData.Name + "?reason=Manual start", {
+                                method: 'POST',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({"reason": "web"})
+                            });
+                    };
+                }
+                let startTimeVal = "NA";
+                let reasonVal = "NA";
+                let statusVal = "NA";
+                if (copyFoundData.LastBuildResult.length > 0) {
+                    startTimeVal = copyFoundData.LastBuildResult[0].StartTime;
+                    reasonVal = copyFoundData.LastBuildResult[0].Reason;
+                    statusVal = copyFoundData.LastBuildResult[0].Status;
+                }
+                document.getElementById("name").innerText = copyFoundData.Name;
+                document.getElementById("clean-build").innerText = copyFoundData.ForceCleanBuild;
+                document.getElementById("git-repo").innerText = copyFoundData.URL;
+                document.getElementById("build-script").innerText = copyFoundData.BuildScript;
+                document.getElementById("lastrun-time").innerText = startTimeVal;
+                document.getElementById("lastrun-reason").innerText = reasonVal;
+                document.getElementById("lastrun-status").innerText = statusVal;
+                document.getElementById("duration").innerText = duration;
+                if (copyFoundData.Triggers.length != document.querySelectorAll("#triggers li").length) {
+                    //
+                    for (let i in copyFoundData.Triggers){
+                        let elem = document.createElement("li");
+                        elem.innerText = JSON.stringify(copyFoundData.Triggers[i]);
+                        document.getElementById("triggers").appendChild(elem);
+                        // copyFoundData.Triggers[i]
+                        // <li></li>
+                    }
+                }
+
+                // document.getElementById("repo-details").innerText = JSON.stringify(copyFoundData, null, 2);
+                let lastResults = document.querySelector("#last-results tbody");
+                let tableRows = lastResults.querySelectorAll("tr");
+                if (tableRows.length > lines.length) {
+                    lastResults.querySelectorAll("tr").forEach((e)=>{
+                        e.remove();
+                    })
+                }
+                while (tableRows.length < lines.length) {
+                    let i = tableRows.length;
+                    let row = document.createElement("tr");
+                    row.setAttribute("class", "pipe-" + lines[i].Pipe.toLowerCase());
+                    let timestamp = document.createElement("td");
+                    timestamp.innerText = lines[i].Time;
+                    row.appendChild(timestamp);
+                    let content = document.createElement("td");
+                    let code = document.createElement("code");
+                    code.innerText = lines[i].Line;
+                    content.appendChild(code);
+                    row.appendChild(content);
+                    lastResults.appendChild(row);
+                    tableRows = lastResults.querySelectorAll("tr");
+                }
+                // let rows = lastResults.querySelectorAll("tr");
+                // for (let i in lines) {
+                //     let cells = rows[i].querySelectorAll("td");
+                //     rows[i].setAttribute("class", lines[i].Pipe);
+                //     if (cells[0].innerText != lines[i].Time) {
+                //         cells[0].innerText = lines[i].Time;
+                //         cells[1].querySelector("code").innerText = lines[i].Line;
+                //     }
+                    
+                //     // console.log(lines[i]);
+                //     //
+                // }
+            });
+        },
+        "/": () => {
+            document.state.registerListener("repos", (data) => {
+                let TABLE_COLUMN_COUNT = 6;
+                // Prepare data.
+                let tableContents = [];
+                for (let i in data) {
+                    let status = "PENDING";
+                    let lastRunStartTime = "NA";
+                    let triggers = {
+                        "WebHook": 0,
+                        "Cron": 0,
+                    };
+                    for (let j in data[i].Triggers) {
+                        triggers[data[i].Triggers[j].Kind]++;
+                    }
+                    for (let j in data[i].LastBuildResult) {
+                        status = data[i].LastBuildResult[j].Status;
+                        lastRunStartTime = data[i].LastBuildResult[j].StartTime;
+                    }
+                    tableContents.push({
+                        "i": i,
+                        "name": data[i].Name,
+                        "status": status,
+                        "lastRunStartTime": lastRunStartTime,
+                        "triggers": triggers
+                    });
+                }
+
+                // Update Table rows count to match.
+                while (document.getElementById("repos").querySelectorAll("tbody tr").length > tableContents.length) {
+                    let lastIndex = document.getElementById("repos").querySelectorAll("tbody tr").length - 1;
+                    document.getElementById("repos").querySelectorAll("tbody tr")[lastIndex].remove();
+                }
+                while (document.getElementById("repos").querySelectorAll("tbody tr").length < tableContents.length) {
+                    let tr = document.createElement("tr");
+                    for (let i = 0; i < TABLE_COLUMN_COUNT; i++) {
+                        let elem = document.createElement(i == 0 ? "th" : "td");
+                        if (i == 0) {
+                            elem.setAttribute("scope", "row");
+                        }
+                        tr.appendChild(elem);
+                    }
+                    document.createElement("td");
+                    document.getElementById("repos").querySelector("tbody").appendChild(tr);
+                }
+                // Update table contents.
+                let rows = document.getElementById("repos").querySelectorAll("tbody tr");
+                function updateCellIfRequired(cells, i, text) {
+                    if (cells[i].innerText != text) {
+                        cells[i].innerText = text;
+                    }
+                }
+                tableContents.forEach((elem) => {
+
+                    let cells = rows[elem.i].querySelectorAll("th, td");
+                    for (let celli in cells) {
+                        if (celli == 5) continue;
+                        cells[celli].onclick = (event) => {
+                            window.location.pathname = "/repo/" + elem.name;
+                        };
+                    }
+                    updateCellIfRequired(cells, 0, "" + (1 + 1 * elem.i));
+                    updateCellIfRequired(cells, 1, elem.name);
+                    updateCellIfRequired(cells, 2, elem.status);
+                    updateCellIfRequired(cells, 3, elem.lastRunStartTime);
+                    updateCellIfRequired(cells, 4, [
+                        "Webhook:",
+                        elem.triggers.WebHook,
+                        "Cron:",
+                        elem.triggers.Cron,
+                    ].join(" "));
+                    // updateCellIfRequired(cells, 4, [
+                    //     "Webhook:",
+                    //     elem.triggers.WebHook,
+                    //     "Cron:",
+                    //     elem.triggers.Cron,
+                    // ].join(" "));
+                    let plays = cells[5].querySelectorAll("i");
+                    let waiting = ["FINISHED", "PENDING"].includes(elem.status);
+                    if (plays.length == 0 ){
+                        let play = document.createElement("i");
+                        play.setAttribute("class", "fa-solid fa-play");
+                        play.onclick = (e) => {
+                            if (!waiting) return;
+                            fetch("/api/repos/" + elem.name, {
+                                method: 'POST',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({"reason": "web"})
+                            });
+                            // console.log(e);
+                        };
+                        plays = [play];
+                        cells[5].appendChild(play);//innerHTML = '<i class="fa-solid fa-play"></i>';
+                    }
+                    let play = plays[0];
+                    rows[elem.i].setAttribute("class", waiting ? "waiting" : "running");
+                    // elem.status
+
+                })
+            });
+        },
+    };
+    for (let route in routes) {
+        if (!window.location.pathname.startsWith(route)) continue;
+        routes[route]();
+        break;
+    }
+
+    function updateState() {
+        if (document.isUpdating) return;
+        document.isUpdating = true;
+        fetch("/api/repos", {
+            headers: {
+                'accept': 'application/json',
+            }
+        }).then((response) => {
+            return response.json();
+        }).then((response) => {
+            document.state.update("repos", response);
+            // document.querySelector("pre").innerHTML = JSON.stringify(response, null, 2);
+            document.isUpdating = false;
+        }).catch((e)=>{
+            console.log("Failed to update repos information", e)
+            document.isUpdating = false;
+        });
+    }
+    updateState();
+    setInterval(updateState, 1000);
+</script>t
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+</body>
+</html>
+{{end}}

@@ -1,0 +1,108 @@
+swagger: "2.0"
+info:
+  title: Go Buildserver
+  version: 1.0.0
+basePath: /api
+paths:
+  /repos:
+    get:
+      summary: Get repos
+      operationId: listRepos
+      produces:
+      - application/json
+      - application/xml
+      responses:
+        '200':
+          description: Successful operation
+          schema:
+            type: array
+            xml:
+              name: addresses
+              wrapped: true
+            items:  
+              $ref: '#/definitions/Repo'
+  /repos/{name}:
+    post:
+      summary: Start build
+      description: ''
+      operationId: startBuild
+      consumes:
+      - application/json
+      - application/xml
+      - application/x-www-form-urlencoded
+      parameters:
+        - name: name
+          in: path
+          required: true
+          type: string
+        - in: body
+          name: data
+          schema:
+            type: object
+            additionalProperties: true
+          required: true
+        - name: reason
+          in: query
+          type: string
+          description: The reason for the build.
+          required: true
+      responses:
+        '200':
+          description: Started build
+definitions:
+  BuildResultLine:
+    type: object
+    properties:
+      Line:
+        type: string
+      Time:
+        type: string
+        format: date-time
+      Pipe:
+        type: string
+  BuildResult:
+    type: object
+    properties:
+      StartTime:
+        type: string
+        format: date-time
+      Status:
+        type: string
+      Reason:
+        type: string
+      Lines:
+        type: array
+        xml:
+          wrapped: true
+        items:
+          $ref: '#/definitions/BuildResultLine'
+  Trigger:
+    type: object
+    properties:
+      Kind:
+        type: string
+      Schedule:
+        type: string
+  Repo:
+    type: object
+    properties:
+      LastBuildResult:
+        type: array
+        xml:
+          wrapped: true
+        items:
+          $ref: '#/definitions/BuildResult'
+      URL:
+        type: string
+      Name:
+        type: string
+      BuildScript:
+        type: string
+      ForceCleanBuild:
+        type: boolean
+      Triggers:
+        type: array
+        xml:
+          wrapped: true
+        items:
+          $ref: '#/definitions/Trigger'
