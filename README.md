@@ -1,4 +1,11 @@
 # go-buildserver
+A very basic build server, written in Go. Why, because I needed a build server
+which, didn't use a lot of ram, like the other solutions available.
+
+What is not a lot of ram? Example setup uses less then 30MB of RAM inside the
+given Docker container.
+
+Documentation of the config file can be found in the docs folder: [docs/config_format.md](docs/config_format.md)
 
 ## Build the server
 ```
