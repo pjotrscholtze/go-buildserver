@@ -244,7 +244,7 @@ func (r *repo) Build(reason string) {
 		"eval `ssh-agent`",
 		"ssh-agent &",
 		"ssh-add " + (*r).repo.SSHKeyLocation,
-		"git clone " + r.repo.URL + " " + gitPath,
+		"git clone --depth 1 " + r.repo.URL + " " + gitPath,
 		"chmod +x " + path.Join(gitPath, r.repo.BuildScript),
 		path.Join(gitPath, r.repo.BuildScript),
 		"pkill ssh-agent",
