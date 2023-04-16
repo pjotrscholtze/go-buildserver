@@ -1,6 +1,9 @@
 
 Example yaml:
 ```
+MaxHistoryInMemory: 1
+HTTPPort: 3000
+HTTPHost: "0.0.0.0"
 WorkspaceDirectory: /tmp/go-buildserver
 Repos:
 - URL: git@github.com:pjotrscholtze/go-buildserver.git
@@ -17,6 +20,9 @@ Repos:
 Field description
 | Field                       | Description                                                                                 |
 |-----------------------------|---------------------------------------------------------------------------------------------|
+| MaxHistoryInMemory          | Maximum number of builds to keep in memory.                                                 |
+| HTTPPort                    | HTTP port to listen on.                                                                     |
+| HTTPHost                    | Interface to listen on for HTTP.                                                            |
 | WorkspaceDirectory          | Directory to clone, and run builds in.                                                      |
 | Repos                       | List of repos to be able to build.                                                          |
 | Repos[].URL                 | URL of the repo to clone at build time.                                                     |
