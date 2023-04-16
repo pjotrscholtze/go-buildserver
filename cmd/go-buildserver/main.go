@@ -37,6 +37,7 @@ func main() {
 		return
 	}
 	path := os.Args[1]
+	// path := "../../example/config.yaml"
 	log.Println("Starting buildserver")
 
 	log.Printf("Loading config: %s\n", path)
@@ -45,7 +46,7 @@ func main() {
 	cr := cron.New(cron.WithSeconds())
 	cr.Start()
 
-	buildRepo := repo.NewBuildRepo(c, cr)
+	buildRepo := repo.NewBuildRepo(&c, cr)
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
 	if err != nil {
@@ -79,8 +80,8 @@ func main() {
 	}
 
 	server.ConfigureAPI()
-	server.Port = 3000
-	server.Host = "0.0.0.0"
+	server.Port = c.HTTPPort
+	server.Host = c.HTTPHost
 
 	t := &mock{
 		next: api.Serve(nil),

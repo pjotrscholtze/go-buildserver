@@ -22,6 +22,9 @@ type Repo struct {
 }
 
 type Config struct {
+	MaxHistoryInMemory uint
+	HTTPPort           int
+	HTTPHost           string
 	WorkspaceDirectory string
 	Repos              []Repo
 }

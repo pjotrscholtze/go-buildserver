@@ -46,7 +46,7 @@ func (rl *resultLine) GetLine() string {
 
 type buildRepo struct {
 	repos  []Repo
-	config config.Config
+	config *config.Config
 	cron   *cron.Cron
 }
 type BuildRepo interface {
@@ -106,7 +106,7 @@ func (br *buildResult) Status() ResultStatus {
 
 type repo struct {
 	repo         config.Repo
-	results      []buildResult
+	results      []*buildResult
 	resultsMutex sync.Mutex
 	buildRepo    *buildRepo
 }
@@ -149,7 +149,7 @@ func (r *repo) GetLastNBuildResults(n int) []BuildResult {
 	res := make([]BuildResult, min(len(r.results), n))
 	for i := 0; i < len(res); i++ {
 		ind := len(r.results) - n + i
-		res[i] = &r.results[ind]
+		res[i] = r.results[ind]
 	}
 
 	return res
@@ -206,13 +206,18 @@ func (r *repo) Build(reason string) {
 	}
 	os.MkdirAll(repoPath, 0777)
 
-	r.results = append(r.results, buildResult{
+	results := &buildResult{
 		lines:     []buildResultLine{},
 		reason:    reason,
 		starttime: time.Now(),
 		status:    RUNNING,
-	})
-	results := &r.results[len(r.results)-1]
+	}
+	r.results = append(r.results, results)
+	if len(r.results) > int(r.buildRepo.config.MaxHistoryInMemory) {
+		r.results[0].lines = nil
+		r.results = r.results[1:]
+	}
+
 	r.resultsMutex.Unlock()
 	gitPath := path.Join(repoPath, r.repo.Name)
 
@@ -242,6 +247,7 @@ func (r *repo) Build(reason string) {
 		"git clone " + r.repo.URL + " " + gitPath,
 		"chmod +x " + path.Join(gitPath, r.repo.BuildScript),
 		path.Join(gitPath, r.repo.BuildScript),
+		"pkill ssh-agent",
 	}, "\n"))
 	if err != nil {
 		results.lines = append(results.lines, []buildResultLine{
@@ -288,7 +294,7 @@ func (br *buildRepo) List() []Repo {
 	return br.repos
 }
 
-func NewBuildRepo(config config.Config, cr *cron.Cron) BuildRepo {
+func NewBuildRepo(config *config.Config, cr *cron.Cron) BuildRepo {
 	br := &buildRepo{
 		config: config,
 		cron:   cr,
