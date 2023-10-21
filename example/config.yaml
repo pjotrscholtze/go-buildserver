@@ -3,7 +3,7 @@ HTTPPort: 3000
 HTTPHost: "0.0.0.0"
 WorkspaceDirectory: /tmp/go-buildserver
 Repos:
-- URL: git@github.com:pjotrscholtze/go-buildserver.git
+- URL: https://github.com/pjotrscholtze/go-buildserver.git
   Name: Go-Buildserver
   BuildScript: ./build.sh
   SSHKeyLocation: /data/.ssh/github.com

@@ -118,6 +118,9 @@
                 //     // console.log(lines[i]);
                 //     //
                 // }
+                if (document.getElementById("auto-scroll").checked) {
+                    window.scrollTo(0, document.body.scrollHeight);
+                }
             });
         },
         "/": () => {
