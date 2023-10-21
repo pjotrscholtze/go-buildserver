@@ -31,6 +31,9 @@ type Repo struct {
 	// name
 	Name string `json:"Name,omitempty"`
 
+	// path
+	Path string `json:"Path,omitempty"`
+
 	// triggers
 	Triggers []*Trigger `json:"Triggers" xml:"Triggers"`
 

@@ -50,6 +50,7 @@ func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.BuildRe
 				ForceCleanBuild: buildRepo.ForceCleanBuild(),
 				Name:            buildRepo.GetName(),
 				URL:             buildRepo.GetURL(),
+				Path:            buildRepo.GetPath(),
 				LastBuildResult: outputLbr,
 				Triggers:        make([]*models.Trigger, len(triggers)),
 			}

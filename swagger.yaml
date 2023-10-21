@@ -92,6 +92,8 @@ definitions:
           wrapped: true
         items:
           $ref: '#/definitions/BuildResult'
+      Path:
+        type: string
       URL:
         type: string
       Name:

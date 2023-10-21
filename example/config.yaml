@@ -3,8 +3,15 @@ HTTPPort: 3000
 HTTPHost: "0.0.0.0"
 WorkspaceDirectory: /tmp/go-buildserver
 Repos:
+- Path: ../../
+  Name: Path_based_example
+  BuildScript: ./build2.sh
+  Triggers:
+  - Kind: Cron
+    Schedule: "*/10 * * * * *"
+  - Kind: WebHook
 - URL: https://github.com/pjotrscholtze/go-buildserver.git
-  Name: Go-Buildserver
+  Name: Go-Buildserver_Repo_clone_example
   BuildScript: ./build.sh
   SSHKeyLocation: /data/.ssh/github.com
   ForceCleanBuild: True

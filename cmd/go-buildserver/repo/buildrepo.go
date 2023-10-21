@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -115,6 +116,7 @@ type Repo interface {
 	GetBuildScript() string
 	ForceCleanBuild() bool
 	GetName() string
+	GetPath() string
 	GetURL() string
 	GetTriggers() []config.Trigger
 	GetLastNBuildResults(n int) []BuildResult
@@ -167,6 +169,10 @@ func (r *repo) GetName() string {
 	return r.repo.Name
 }
 
+func (r *repo) GetPath() string {
+	return r.repo.Path
+}
+
 func (r *repo) GetURL() string {
 	return r.repo.URL
 }
@@ -175,9 +181,15 @@ func (r *repo) GetTriggers() []config.Trigger {
 }
 
 func (r *repo) printBuildStart(reason string) {
+	isRepoBased := len(r.GetURL()) > 0
 	log.Printf("Starting build for '%s', reason: %s", r.repo.Name, reason)
 	log.Println("Build configuration:")
-	log.Printf("- URL:%s\n", r.repo.URL)
+	log.Printf("- Is repo based:%s\n", strconv.FormatBool(isRepoBased))
+	if isRepoBased {
+		log.Printf("- URL:%s\n", r.repo.URL)
+	} else {
+		log.Printf("- Path:%s\n", r.repo.Path)
+	}
 	log.Printf("- Name:%s\n", r.repo.Name)
 	log.Printf("- BuildScript:%s\n", r.repo.BuildScript)
 	log.Printf("- ForceCleanBuild:%s\n", r.repo.ForceCleanBuild)
@@ -198,9 +210,10 @@ func (r *repo) Build(reason string) {
 	r.resultsMutex.Lock()
 	os.MkdirAll(r.buildRepo.config.WorkspaceDirectory, 0777)
 
+	isRepoBased := len(r.GetURL()) > 0
 	repoPath := path.Join(r.buildRepo.config.WorkspaceDirectory, r.repo.Name)
 	doClone := !fileExists(repoPath)
-	if r.ForceCleanBuild() && !doClone {
+	if isRepoBased && r.ForceCleanBuild() && !doClone {
 		doClone = true
 		os.RemoveAll(repoPath)
 	}
@@ -239,16 +252,30 @@ func (r *repo) Build(reason string) {
 		fmt.Println(err)
 		return
 	}
-	_, err = f.WriteString(strings.Join([]string{
-		"#!/bin/sh",
-		"eval `ssh-agent`",
-		"ssh-agent &",
-		"ssh-add " + (*r).repo.SSHKeyLocation,
-		"git clone --depth 1 " + r.repo.URL + " " + gitPath,
-		"chmod +x " + path.Join(gitPath, r.repo.BuildScript),
-		path.Join(gitPath, r.repo.BuildScript),
-		"pkill ssh-agent",
-	}, "\n"))
+
+	bootScript := []string{"#!/bin/sh"}
+	jobPath := gitPath
+	if !isRepoBased {
+		jobPath = r.GetPath()
+	}
+	if isRepoBased {
+		bootScript = append(bootScript, []string{
+			"eval `ssh-agent`",
+			"ssh-agent &",
+			"ssh-add " + (*r).repo.SSHKeyLocation,
+			"git clone --depth 1 " + r.repo.URL + " " + gitPath,
+		}...)
+	}
+
+	bootScript = append(bootScript, []string{
+		"chmod +x " + path.Join(jobPath, r.repo.BuildScript),
+		path.Join(jobPath, r.repo.BuildScript),
+	}...)
+	if isRepoBased {
+		bootScript = append(bootScript, "pkill ssh-agent")
+	}
+
+	_, err = f.WriteString(strings.Join(bootScript, "\n"))
 	if err != nil {
 		results.lines = append(results.lines, []buildResultLine{
 			{

@@ -64,9 +64,18 @@
                     reasonVal = copyFoundData.LastBuildResult[0].Reason;
                     statusVal = copyFoundData.LastBuildResult[0].Status;
                 }
+                let repoBased = copyFoundData.Path === undefined;
+                if (repoBased) {
+                    document.querySelectorAll(".repo-text").forEach((e)=>{e.style.display = "inline"});
+                    document.querySelectorAll(".path-based-text").forEach((e)=>{e.style.display = "none"});
+                } else {
+                    document.querySelectorAll(".path-based-text").forEach((e)=>{e.style.display = "inline"});
+                    document.querySelectorAll(".repo-text").forEach((e)=>{e.style.display = "none"});
+                }
                 document.getElementById("name").innerText = copyFoundData.Name;
                 document.getElementById("clean-build").innerText = copyFoundData.ForceCleanBuild;
                 document.getElementById("git-repo").innerText = copyFoundData.URL;
+                document.getElementById("path").innerText = copyFoundData.Path;
                 document.getElementById("build-script").innerText = copyFoundData.BuildScript;
                 document.getElementById("lastrun-time").innerText = startTimeVal;
                 document.getElementById("lastrun-reason").innerText = reasonVal;
@@ -85,10 +94,12 @@
 
                 // document.getElementById("repo-details").innerText = JSON.stringify(copyFoundData, null, 2);
                 let lastResults = document.querySelector("#last-results tbody");
+                let resultsChanged = false;
                 let tableRows = lastResults.querySelectorAll("tr");
                 if (tableRows.length > lines.length) {
                     lastResults.querySelectorAll("tr").forEach((e)=>{
                         e.remove();
+                        resultsChanged = true;
                     })
                 }
                 while (tableRows.length < lines.length) {
@@ -105,6 +116,7 @@
                     row.appendChild(content);
                     lastResults.appendChild(row);
                     tableRows = lastResults.querySelectorAll("tr");
+                    resultsChanged = true;
                 }
                 // let rows = lastResults.querySelectorAll("tr");
                 // for (let i in lines) {
@@ -118,7 +130,7 @@
                 //     // console.log(lines[i]);
                 //     //
                 // }
-                if (document.getElementById("auto-scroll").checked) {
+                if (resultsChanged && document.getElementById("auto-scroll").checked) {
                     window.scrollTo(0, document.body.scrollHeight);
                 }
             });

@@ -13,6 +13,7 @@ type Trigger struct {
 }
 
 type Repo struct {
+	Path            string
 	URL             string
 	SSHKeyLocation  string
 	Name            string

@@ -102,6 +102,8 @@ components:
             $ref: '#/components/schemas/BuildResult'
         URL:
           type: string
+        Path:
+          type: string
         Name:
           type: string
         BuildScript:

@@ -152,6 +152,9 @@ func init() {
         "Name": {
           "type": "string"
         },
+        "Path": {
+          "type": "string"
+        },
         "Triggers": {
           "type": "array",
           "items": {
@@ -312,6 +315,9 @@ func init() {
           }
         },
         "Name": {
+          "type": "string"
+        },
+        "Path": {
           "type": "string"
         },
         "Triggers": {

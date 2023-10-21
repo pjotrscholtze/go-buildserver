@@ -6,7 +6,7 @@
           <div class="card">
             <div class="card-header"><span id="runner"><i class="fa-solid fa-play"></i></span> Repo details</div>
             <div class="card-body">
-                <p class="card-text">Name: <strong id="name"></strong>, runs with clean build: <strong id="clean-build"></strong>. Git repo: <strong id="git-repo"></strong>, build script: <strong id="build-script"></strong>. Last run @<strong id="lastrun-time"></strong>, reason <strong id="lastrun-reason"></strong>, status: <strong id="lastrun-status"></strong>. Build took: <strong id="duration"></strong>.</p>
+                <p class="card-text">Name: <strong id="name"></strong><span class="repo-text">, runs with clean build: <strong id="clean-build"></strong></span>. <span class="repo-text">Git repo: <strong id="git-repo"></strong></span><span class="path-based-text">Path: <strong id="path"></strong></span>, build script: <strong id="build-script"></strong>. Last run @<strong id="lastrun-time"></strong>, reason <strong id="lastrun-reason"></strong>, status: <strong id="lastrun-status"></strong>. Build took: <strong id="duration"></strong>.</p>
             </div>
           </div>
         </div>
@@ -24,7 +24,7 @@
 
     <div class="scroll-options card">
       <div class="card-header">
-        <input type="checkbox" name="auto-scroll" id="auto-scroll">
+        <input type="checkbox" name="auto-scroll" id="auto-scroll" checked>
         <label for="auto-scroll">Scroll with output</label>
       </div>
     </div>
