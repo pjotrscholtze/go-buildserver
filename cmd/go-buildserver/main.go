@@ -32,12 +32,12 @@ func (m *mock) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		println("Usage: app <config-path.yaml>")
-		return
-	}
-	path := os.Args[1]
-	// path := "../../example/config.yaml"
+	// if len(os.Args) != 2 {
+	// 	println("Usage: app <config-path.yaml>")
+	// 	return
+	// }
+	// path := os.Args[1]
+	path := "../../example/config.yaml"
 	log.Println("Starting buildserver")
 
 	log.Printf("Loading config: %s\n", path)
@@ -46,7 +46,9 @@ func main() {
 	cr := cron.New(cron.WithSeconds())
 	cr.Start()
 
-	buildRepo := repo.NewBuildRepo(&c, cr)
+	buildRepo := repo.NewBuildRepo(&c)
+	bq := repo.NewBuildQueue(buildRepo, cr)
+	go bq.Run()
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
 	if err != nil {
@@ -54,7 +56,7 @@ func main() {
 	}
 
 	api := operations.NewGoBuildserverAPI(swaggerSpec)
-	controller.ConnectControllers(api, buildRepo)
+	controller.ConnectControllers(api, buildRepo, bq)
 	server := restapi.NewServer(api)
 	defer server.Shutdown()
 

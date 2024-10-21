@@ -12,7 +12,6 @@ import (
 
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/config"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/process"
-	"github.com/robfig/cron/v3"
 )
 
 type ResultStatus string
@@ -48,7 +47,6 @@ func (rl *resultLine) GetLine() string {
 type buildRepo struct {
 	repos  []Repo
 	config *config.Config
-	cron   *cron.Cron
 }
 type BuildRepo interface {
 	GetRepoByName(name string) Repo
@@ -112,13 +110,14 @@ type repo struct {
 	buildRepo    *buildRepo
 }
 type Repo interface {
-	Build(reason string)
+	Build(reason, origin, queueTime string)
 	GetBuildScript() string
 	ForceCleanBuild() bool
 	GetName() string
 	GetPath() string
 	GetURL() string
 	GetTriggers() []config.Trigger
+	GetTriggersOfKind(filterKind string) []config.Trigger
 	GetLastNBuildResults(n int) []BuildResult
 }
 
@@ -127,19 +126,6 @@ func min(a, b int) int {
 		return a
 	}
 	return b
-}
-func (r *repo) init(cr *cron.Cron) {
-	for _, trigger := range r.repo.Triggers {
-		if trigger.Kind != "Cron" {
-			continue
-		}
-
-		reason := "Cron: " + trigger.Schedule
-		cr.AddFunc(trigger.Schedule, func() {
-			r.Build(reason)
-		})
-	}
-
 }
 func (r *repo) GetLastNBuildResults(n int) []BuildResult {
 	r.resultsMutex.Lock()
@@ -180,9 +166,20 @@ func (r *repo) GetTriggers() []config.Trigger {
 	return r.repo.Triggers
 }
 
-func (r *repo) printBuildStart(reason string) {
+func (r *repo) GetTriggersOfKind(filterKind string) []config.Trigger {
+	triggers := []config.Trigger{}
+	for _, trigger := range r.repo.Triggers {
+		if trigger.Kind != filterKind {
+			continue
+		}
+		triggers = append(triggers, trigger)
+	}
+	return triggers
+}
+
+func (r *repo) printBuildStart(reason, origin, queueTime string) {
 	isRepoBased := len(r.GetURL()) > 0
-	log.Printf("Starting build for '%s', reason: %s", r.repo.Name, reason)
+	log.Printf("Starting build for '%s', reason: %s, origin: %s, queuetime: %s", r.repo.Name, reason, origin, queueTime)
 	log.Println("Build configuration:")
 	log.Printf("- Is repo based:%s\n", strconv.FormatBool(isRepoBased))
 	if isRepoBased {
@@ -205,8 +202,8 @@ func fileExists(path string) bool {
 	return false
 }
 
-func (r *repo) Build(reason string) {
-	r.printBuildStart(reason)
+func (r *repo) Build(reason, origin, queueTime string) {
+	r.printBuildStart(reason, origin, queueTime)
 	r.resultsMutex.Lock()
 	os.MkdirAll(r.buildRepo.config.WorkspaceDirectory, 0777)
 
@@ -321,16 +318,14 @@ func (br *buildRepo) List() []Repo {
 	return br.repos
 }
 
-func NewBuildRepo(config *config.Config, cr *cron.Cron) BuildRepo {
+func NewBuildRepo(config *config.Config) BuildRepo {
 	br := &buildRepo{
 		config: config,
-		cron:   cr,
 	}
 	res := make([]Repo, len(br.config.Repos))
 	for i, elem := range br.config.Repos {
 		r := repo{repo: elem, buildRepo: br}
 		res[i] = &r
-		r.init(cr)
 	}
 	br.repos = res
 	return br

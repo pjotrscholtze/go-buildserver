@@ -17,7 +17,7 @@ func fmtPipeName(pt process.PipeType) string {
 }
 
 // ConnectControllers with the API.
-func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.BuildRepo) {
+func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.BuildRepo, buildQueue repo.BuildQueue) {
 	api.ListReposHandler = operations.ListReposHandlerFunc(func(lrp operations.ListReposParams) middleware.Responder {
 		buildRepos := buildRepo.List()
 		payload := make([]*models.Repo, len(buildRepos))
@@ -67,7 +67,8 @@ func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.BuildRe
 	})
 
 	api.StartBuildHandler = operations.StartBuildHandlerFunc(func(sbp operations.StartBuildParams) middleware.Responder {
-		buildRepo.GetRepoByName(sbp.Name).Build("HTTP: " + sbp.Reason)
+		// buildRepo.GetRepoByName(sbp.Name).Build("HTTP: " + sbp.Reason)
+		buildQueue.AddQueueItem(sbp.Name, sbp.Reason, "HTTP")
 		return operations.NewStartBuildOK()
 	})
 }
