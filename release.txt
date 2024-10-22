@@ -2,7 +2,7 @@
 - Added a job queue, so now every job will be worked on after eachother, so no
   race  conditions can occur.
 - Moved the UI from Golang templates to Go-Bootstrap (https://github.com/pjotrscholtze/go-bootstrap)
-
+- Implemented websockets for live updating (using github.com/gorilla/websocket)
 
 # Pre 0.0.1
 Implemented various features:

@@ -13,6 +13,7 @@ import (
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/config"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/process"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/util"
+	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/websocketmanager"
 )
 
 type ResultStatus string
@@ -46,8 +47,9 @@ func (rl *resultLine) GetLine() string {
 }
 
 type buildRepo struct {
-	repos  []Repo
-	config *config.Config
+	repos            []Repo
+	config           *config.Config
+	websocketmanager *websocketmanager.WebsocketManager
 }
 type BuildRepo interface {
 	GetRepoByName(name string) Repo
@@ -55,60 +57,33 @@ type BuildRepo interface {
 	List() []Repo
 }
 type BuildResultLine struct {
-	line string
+	Line string
 	pipe process.PipeType
-	time time.Time
+	Pipe string
+	Time time.Time
 }
 
-// type BuildResultLine interface {
-// 	Line() string
-// 	Pipe() process.PipeType
-// 	Time() time.Time
-// }
-
-func (brl *BuildResultLine) Line() string {
-	return brl.line
-}
-func (brl *BuildResultLine) Pipe() process.PipeType {
-	return brl.pipe
-}
-func (brl *BuildResultLine) Time() time.Time {
-	return brl.time
+type BuildResult struct {
+	Lines            []BuildResultLine
+	Reason           string
+	Starttime        time.Time
+	Status           ResultStatus
+	Websocketmanager *websocketmanager.WebsocketManager
 }
 
-type buildResult struct {
-	lines     []BuildResultLine
-	reason    string
-	starttime time.Time
-	status    ResultStatus
-}
-type BuildResult interface {
-	Lines() []BuildResultLine
-	Reason() string
-	Starttime() time.Time
-	Status() ResultStatus
-}
-
-func (br *buildResult) Lines() []BuildResultLine {
-	res := make([]BuildResultLine, len(br.lines))
-	for i, _ := range br.lines {
-		res[i] = br.lines[i]
+func (br *BuildResult) addLines(lines []BuildResultLine) {
+	for i := range lines {
+		br.addLine(lines[i])
 	}
-	return res
 }
-func (br *buildResult) Reason() string {
-	return br.reason
-}
-func (br *buildResult) Starttime() time.Time {
-	return br.starttime
-}
-func (br *buildResult) Status() ResultStatus {
-	return br.status
+func (br *BuildResult) addLine(line BuildResultLine) {
+	br.Lines = append(br.Lines, line)
+	br.Websocketmanager.BroadcastOnEndpoint("repo", "Go-Buildserver_Repo_clone_example", br)
 }
 
 type repo struct {
 	repo         config.Repo
-	results      []*buildResult
+	results      []*BuildResult
 	resultsMutex sync.Mutex
 	buildRepo    *buildRepo
 }
@@ -140,7 +115,7 @@ func (r *repo) GetLastNBuildResults(n int) []BuildResult {
 	res := make([]BuildResult, min(len(r.results), n))
 	for i := 0; i < len(res); i++ {
 		ind := len(r.results) - n + i
-		res[i] = r.results[ind]
+		res[i] = *r.results[ind]
 	}
 
 	return res
@@ -219,15 +194,16 @@ func (r *repo) Build(reason, origin, queueTime string) {
 	}
 	os.MkdirAll(repoPath, 0777)
 
-	results := &buildResult{
-		lines:     []BuildResultLine{},
-		reason:    reason,
-		starttime: time.Now(),
-		status:    RUNNING,
+	results := &BuildResult{
+		Lines:            []BuildResultLine{},
+		Reason:           reason,
+		Starttime:        time.Now(),
+		Status:           RUNNING,
+		Websocketmanager: r.buildRepo.websocketmanager,
 	}
 	r.results = append(r.results, results)
 	if len(r.results) > int(r.buildRepo.config.MaxHistoryInMemory) {
-		r.results[0].lines = nil
+		r.results[0].Lines = nil
 		r.results = r.results[1:]
 	}
 
@@ -237,18 +213,20 @@ func (r *repo) Build(reason, origin, queueTime string) {
 	f, err := os.Create(path.Join(repoPath, "boot.sh"))
 	defer f.Close()
 	if err != nil {
-		results.lines = append(results.lines, []BuildResultLine{
+		results.addLines([]BuildResultLine{
 			{
-				line: "Failed to create boot script:",
+				Line: "Failed to create boot script:",
 				pipe: process.STDERR,
-				time: time.Now(),
+				Pipe: "STDERR",
+				Time: time.Now(),
 			},
 			{
-				line: err.Error(),
+				Line: err.Error(),
 				pipe: process.STDERR,
-				time: time.Now(),
+				Pipe: "STDERR",
+				Time: time.Now(),
 			},
-		}...)
+		})
 		fmt.Println(err)
 		return
 	}
@@ -277,18 +255,20 @@ func (r *repo) Build(reason, origin, queueTime string) {
 
 	_, err = f.WriteString(strings.Join(bootScript, "\n"))
 	if err != nil {
-		results.lines = append(results.lines, []BuildResultLine{
+		results.addLines([]BuildResultLine{
 			{
-				line: "Failed to write boot script:",
+				Line: "Failed to write boot script:",
 				pipe: process.STDERR,
-				time: time.Now(),
+				Pipe: "STDERR",
+				Time: time.Now(),
 			},
 			{
-				line: err.Error(),
+				Line: err.Error(),
 				pipe: process.STDERR,
-				time: time.Now(),
+				Pipe: "STDERR",
+				Time: time.Now(),
 			},
-		}...)
+		})
 		fmt.Println(err)
 		return
 	}
@@ -298,14 +278,18 @@ func (r *repo) Build(reason, origin, queueTime string) {
 		[]string{path.Join(repoPath, "boot.sh")},
 		func(pt process.PipeType, t time.Time, s string) {
 			r.resultsMutex.Lock()
-			results.lines = append(results.lines, BuildResultLine{
-				line: s,
+			results.addLine(BuildResultLine{
+				Line: s,
 				pipe: pt,
-				time: t,
+				Pipe: map[process.PipeType]string{
+					process.STDOUT: "STDOUT",
+					process.STDERR: "STDERR",
+				}[pt],
+				Time: t,
 			})
 			r.resultsMutex.Unlock()
 		})
-	results.status = FINISHED
+	results.Status = FINISHED
 }
 
 func (br *buildRepo) GetRepoByName(name string) Repo {
@@ -330,9 +314,10 @@ func (br *buildRepo) List() []Repo {
 	return br.repos
 }
 
-func NewBuildRepo(config *config.Config) BuildRepo {
+func NewBuildRepo(config *config.Config, wm *websocketmanager.WebsocketManager) BuildRepo {
 	br := &buildRepo{
-		config: config,
+		config:           config,
+		websocketmanager: wm,
 	}
 	res := make([]Repo, len(br.config.Repos))
 	for i, elem := range br.config.Repos {

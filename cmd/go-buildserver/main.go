@@ -12,6 +12,7 @@ import (
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/config"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/controller"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/repo"
+	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/websocketmanager"
 	"github.com/pjotrscholtze/go-buildserver/restapi"
 	"github.com/pjotrscholtze/go-buildserver/restapi/operations"
 	"github.com/robfig/cron/v3"
@@ -45,9 +46,10 @@ func main() {
 	log.Println("")
 	cr := cron.New(cron.WithSeconds())
 	cr.Start()
+	wm := websocketmanager.NewWebsocketManager()
 
-	buildRepo := repo.NewBuildRepo(&c)
-	bq := repo.NewBuildQueue(buildRepo, cr)
+	buildRepo := repo.NewBuildRepo(&c, &wm)
+	bq := repo.NewBuildQueue(buildRepo, cr, &wm)
 	go bq.Run()
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)
@@ -87,7 +89,7 @@ func main() {
 
 	t := &mock{
 		next: api.Serve(nil),
-		mux:  controller.RegisterUIController(buildRepo, bq),
+		mux:  controller.RegisterUIController(buildRepo, bq, wm),
 	}
 	server.SetHandler(t)
 

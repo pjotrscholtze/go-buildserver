@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-openapi/strfmt"
+	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/websocketmanager"
 	"github.com/pjotrscholtze/go-buildserver/models"
 	"github.com/robfig/cron/v3"
 )
@@ -19,6 +20,7 @@ type buildQueue struct {
 	items     []models.Job
 	lock      sync.Locker
 	buildRepo BuildRepo
+	wm        *websocketmanager.WebsocketManager
 }
 
 type BuildQueue interface {
@@ -51,6 +53,7 @@ func (bq *buildQueue) tick() *models.Job {
 func (bq *buildQueue) Run() {
 	for {
 		if item := bq.tick(); item != nil {
+			bq.wm.BroadcastOnEndpoint("jobs", "", bq.items)
 			bq.buildRepo.GetRepoByName(item.RepoName).Build(item.BuildReason, item.Origin, item.QueueTime.String())
 		}
 		time.Sleep(50 * time.Millisecond)
@@ -65,13 +68,15 @@ func (bq *buildQueue) AddQueueItem(repoName, buildReason, origin string) {
 		Origin:      origin,
 		QueueTime:   strfmt.DateTime(time.Now()),
 	})
+	bq.wm.BroadcastOnEndpoint("jobs", "", bq.items)
 }
 
-func NewBuildQueue(buildRepo BuildRepo, cr *cron.Cron) BuildQueue {
+func NewBuildQueue(buildRepo BuildRepo, cr *cron.Cron, wm *websocketmanager.WebsocketManager) BuildQueue {
 	bq := &buildQueue{
 		items:     []models.Job{},
 		lock:      &sync.Mutex{},
 		buildRepo: buildRepo,
+		wm:        wm,
 	}
 	for _, repo := range buildRepo.List() {
 		for _, trigger := range repo.GetTriggersOfKind("Cron") {

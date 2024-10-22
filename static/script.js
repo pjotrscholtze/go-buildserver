@@ -38,42 +38,43 @@ function ensureTableContent(table, content) {
     return changeOccured;
 }
 
+function createWsConnection(endpoint, onMessage) {
+    function setupWebsocket() {
+        var conn = new WebSocket(endpoint);
+        conn.onclose = function(evt) {
+            console.log('Connection closed', evt);
+            setTimeout(setupWebsocket, 2000);
+        }
+        conn.onmessage = onMessage;
+        conn.onerror = ()=>{
+            setTimeout(setupWebsocket, 2000);
+        };
+        setInterval(()=>{
+            try{
+                conn.send("ping");
+            } catch(Exception){}
+        }, 1000);
+    }
+    setupWebsocket();
+}
 
 if (window.location.pathname === "/") {
-    setInterval(()=>{
-        fetch("http://localhost:3000/api/jobs",{
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }}).then((r)=>{return r.json()}).
-            then((r)=>{
-                ensureTableContent(document.querySelector("table"), r);
-            })
-    }, 300)        
+    createWsConnection("ws://localhost:3000/ws/jobs", function(evt) {
+        const jobs = JSON.parse(evt.data);
+        console.log(jobs);
+        ensureTableContent(document.querySelector("table"), jobs);
+    });
 } else if (window.location.pathname.startsWith("/repo/")) {
-    setInterval(()=>{
-        fetch("http://localhost:3000/api/repos",{
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }}).then((r)=>{return r.json()}).
-            then((r)=>{
-                const repoName = document.querySelector(".properties").getAttribute("data-repo");
-                const candidates = r.filter((e)=>{return e.Name === repoName});
-                if (candidates.length === 0) {
-                    // This is weird...
-                    return;
-                }
-                const repoData = candidates[0];
-                if (repoData.LastBuildResult.length > 0) {
-                    document.querySelector("#build-status span").innerText = repoData.LastBuildResult[0].Status;
-                    document.querySelector("#build-reason span").innerText = repoData.LastBuildResult[0].Reason;
-                    document.querySelector("#build-start-time span").innerText = repoData.LastBuildResult[0].StartTime;
-                    const resultsChanged = ensureTableContent(document.querySelector("table"), repoData.LastBuildResult[0].Lines);
-                    if (resultsChanged && document.getElementById("auto-scroll").checked) {
-                        window.scrollTo(0, document.body.scrollHeight);
-                    }
-               }
-            })
-    }, 300)        
+    const repoName = document.querySelector(".properties").getAttribute("data-repo");
+    createWsConnection("ws://localhost:3000/ws/repo/"+repoName, function(evt) {
+        const repoData = JSON.parse(evt.data);
+
+        document.querySelector("#build-status span").innerText = repoData.Status;
+        document.querySelector("#build-reason span").innerText = repoData.Reason;
+        document.querySelector("#build-start-time span").innerText = repoData.StartTime;
+        const resultsChanged = ensureTableContent(document.querySelector("table"), repoData.Lines);
+        if (resultsChanged && document.getElementById("auto-scroll").checked) {
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+    });
 }

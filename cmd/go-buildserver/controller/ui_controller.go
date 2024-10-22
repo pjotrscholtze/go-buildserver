@@ -11,9 +11,9 @@ import (
 	"github.com/pjotrscholtze/go-bootstrap/cmd/go-bootstrap/bootstrap"
 	"github.com/pjotrscholtze/go-bootstrap/cmd/go-bootstrap/builder"
 	"github.com/pjotrscholtze/go-bootstrap/cmd/go-bootstrap/htmlwrapper"
-	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/process"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/repo"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/view"
+	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/websocketmanager"
 	"github.com/pjotrscholtze/go-buildserver/models"
 )
 
@@ -37,7 +37,7 @@ func wrapUITemplate(path string) bytes.Buffer {
 	return renderUITemplate(path, struct{}{})
 }
 
-func RegisterUIController(buildRepo repo.BuildRepo, buildQueue repo.BuildQueue) *http.ServeMux {
+func RegisterUIController(buildRepo repo.BuildRepo, buildQueue repo.BuildQueue, wm websocketmanager.WebsocketManager) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("../../static"))))
@@ -116,26 +116,23 @@ func RegisterUIController(buildRepo repo.BuildRepo, buildQueue repo.BuildQueue) 
 		lines := []repo.BuildResultLine{}
 		if len(lastBuilds) == 1 {
 			lastBuild := lastBuilds[0]
-			lastBuildStatus = string(lastBuild.Status())
-			lastBuildReason = lastBuild.Reason()
-			lastBuildStarttime = lastBuild.Starttime().Format(time.DateTime)
-			lines = lastBuild.Lines()
+			lastBuildStatus = string(lastBuild.Status)
+			lastBuildReason = lastBuild.Reason
+			lastBuildStarttime = lastBuild.Starttime.Format(time.DateTime)
+			lines = lastBuild.Lines
 		}
 		tb := builder.NewTableBuilder[repo.BuildResultLine](lines)
 		tb.GetTypeMapperConv().RegisterCustomFieldMapping("pipe", func(fieldName string, refStruct interface{}) htmlwrapper.Elm {
 			line := refStruct.(repo.BuildResultLine)
-			return htmlwrapper.Text(map[process.PipeType]string{
-				process.STDOUT: "STDOUT",
-				process.STDERR: "STDERR",
-			}[line.Pipe()])
+			return htmlwrapper.Text(line.Pipe)
 		})
 		tb.GetTypeMapperConv().RegisterCustomFieldMapping("time", func(fieldName string, refStruct interface{}) htmlwrapper.Elm {
 			line := refStruct.(repo.BuildResultLine)
-			return htmlwrapper.Text(strfmt.DateTime(line.Time()).String())
+			return htmlwrapper.Text(strfmt.DateTime(line.Time).String())
 		})
 
-		tb.GetTableMapping().MoveToIndex("pipe", 0).MoveToIndex("time", 1)
-		tb.GetTableMapping().Set("pipe", "Pipe").Set("time", "Time").Set("line", "Line")
+		tb.GetTableMapping().MoveToIndex("Pipe", 0).MoveToIndex("Time", 1).RemoveByFieldName("pipe")
+
 		tb.SetSize(bootstrap.BsTablSizeSmall)
 		buildLines := tb.AsElm()
 		buildMeta := &htmlwrapper.HTMLElm{
@@ -228,6 +225,7 @@ func RegisterUIController(buildRepo repo.BuildRepo, buildQueue repo.BuildQueue) 
 	//     <label for="auto-scroll">Scroll with output</label>
 	//   </div>
 	// </div>
+	mux.HandleFunc("/ws/", wm.Setup)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		jobs := []models.Job{}
 		for _, j := range buildQueue.List() {
