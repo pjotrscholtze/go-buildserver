@@ -45,6 +45,9 @@ func NewGoBuildserverAPI(spec *loads.Document) *GoBuildserverAPI {
 		JSONProducer: runtime.JSONProducer(),
 		XMLProducer:  runtime.XMLProducer(),
 
+		ListJobsHandler: ListJobsHandlerFunc(func(params ListJobsParams) middleware.Responder {
+			return middleware.NotImplemented("operation ListJobs has not yet been implemented")
+		}),
 		ListReposHandler: ListReposHandlerFunc(func(params ListReposParams) middleware.Responder {
 			return middleware.NotImplemented("operation ListRepos has not yet been implemented")
 		}),
@@ -96,6 +99,8 @@ type GoBuildserverAPI struct {
 	//   - application/xml
 	XMLProducer runtime.Producer
 
+	// ListJobsHandler sets the operation handler for the list jobs operation
+	ListJobsHandler ListJobsHandler
 	// ListReposHandler sets the operation handler for the list repos operation
 	ListReposHandler ListReposHandler
 	// StartBuildHandler sets the operation handler for the start build operation
@@ -186,6 +191,9 @@ func (o *GoBuildserverAPI) Validate() error {
 		unregistered = append(unregistered, "XMLProducer")
 	}
 
+	if o.ListJobsHandler == nil {
+		unregistered = append(unregistered, "ListJobsHandler")
+	}
 	if o.ListReposHandler == nil {
 		unregistered = append(unregistered, "ListReposHandler")
 	}
@@ -286,6 +294,10 @@ func (o *GoBuildserverAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/jobs"] = NewListJobs(o.context, o.ListJobsHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

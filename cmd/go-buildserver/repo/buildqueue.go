@@ -4,17 +4,19 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-openapi/strfmt"
+	"github.com/pjotrscholtze/go-buildserver/models"
 	"github.com/robfig/cron/v3"
 )
 
-type buildQueueItem struct {
-	RepoName    string
-	BuildReason string
-	Origin      string
-	QueueTime   time.Time
-}
+//	type buildQueueItem struct {
+//		RepoName    string
+//		BuildReason string
+//		Origin      string
+//		QueueTime   time.Time
+//	}
 type buildQueue struct {
-	items     []buildQueueItem
+	items     []models.Job
 	lock      sync.Locker
 	buildRepo BuildRepo
 }
@@ -22,9 +24,21 @@ type buildQueue struct {
 type BuildQueue interface {
 	Run()
 	AddQueueItem(repoName, buildReason, origin string)
+	List() []*models.Job
 }
 
-func (bq *buildQueue) tick() *buildQueueItem {
+func (bq *buildQueue) List() []*models.Job {
+	out := []*models.Job{}
+	bq.lock.Lock()
+	defer bq.lock.Unlock()
+	for i := range bq.items {
+		out = append(out, &bq.items[i])
+	}
+
+	return out
+}
+
+func (bq *buildQueue) tick() *models.Job {
 	bq.lock.Lock()
 	defer bq.lock.Unlock()
 	if len(bq.items) == 0 {
@@ -45,17 +59,17 @@ func (bq *buildQueue) Run() {
 func (bq *buildQueue) AddQueueItem(repoName, buildReason, origin string) {
 	bq.lock.Lock()
 	defer bq.lock.Unlock()
-	bq.items = append(bq.items, buildQueueItem{
+	bq.items = append(bq.items, models.Job{
 		RepoName:    repoName,
 		BuildReason: buildReason,
 		Origin:      origin,
-		QueueTime:   time.Now(),
+		QueueTime:   strfmt.DateTime(time.Now()),
 	})
 }
 
 func NewBuildQueue(buildRepo BuildRepo, cr *cron.Cron) BuildQueue {
 	bq := &buildQueue{
-		items:     []buildQueueItem{},
+		items:     []models.Job{},
 		lock:      &sync.Mutex{},
 		buildRepo: buildRepo,
 	}

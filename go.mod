@@ -1,6 +1,8 @@
 module github.com/pjotrscholtze/go-buildserver
 
-go 1.19
+go 1.21.2
+
+toolchain go1.22.4
 
 require (
 	github.com/ghodss/yaml v1.0.0 // direct
@@ -27,6 +29,7 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
+	github.com/pjotrscholtze/go-bootstrap v0.0.0-20240406110116-da6b32ebb712 // indirect
 	go.mongodb.org/mongo-driver v1.12.1 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect

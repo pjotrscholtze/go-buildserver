@@ -1,0 +1,13 @@
+# 0.0.1 (unreleased)
+- Added a job queue, so now every job will be worked on after eachother, so no
+  race  conditions can occur.
+- Moved the UI from Golang templates to Go-Bootstrap (https://github.com/pjotrscholtze/go-bootstrap)
+
+
+# Pre 0.0.1
+Implemented various features:
+- Jobs should be able to run periodically
+- Jobs should be able to be triggered with a webhook
+- See the results of the last build
+- Clone the repository related to the job
+- Repository can have multiple pipelines

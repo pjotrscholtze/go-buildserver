@@ -25,6 +25,31 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
+    "/jobs": {
+      "get": {
+        "produces": [
+          "application/json",
+          "application/xml"
+        ],
+        "summary": "Get jobs",
+        "operationId": "listJobs",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Job"
+              },
+              "xml": {
+                "name": "jobs",
+                "wrapped": true
+              }
+            }
+          }
+        }
+      }
+    },
     "/repos": {
       "get": {
         "produces": [
@@ -131,6 +156,24 @@ func init() {
         }
       }
     },
+    "Job": {
+      "type": "object",
+      "properties": {
+        "BuildReason": {
+          "type": "string"
+        },
+        "Origin": {
+          "type": "string"
+        },
+        "QueueTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "RepoName": {
+          "type": "string"
+        }
+      }
+    },
     "Repo": {
       "type": "object",
       "properties": {
@@ -190,6 +233,31 @@ func init() {
   },
   "basePath": "/api",
   "paths": {
+    "/jobs": {
+      "get": {
+        "produces": [
+          "application/json",
+          "application/xml"
+        ],
+        "summary": "Get jobs",
+        "operationId": "listJobs",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Job"
+              },
+              "xml": {
+                "name": "jobs",
+                "wrapped": true
+              }
+            }
+          }
+        }
+      }
+    },
     "/repos": {
       "get": {
         "produces": [
@@ -293,6 +361,24 @@ func init() {
         "Time": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "Job": {
+      "type": "object",
+      "properties": {
+        "BuildReason": {
+          "type": "string"
+        },
+        "Origin": {
+          "type": "string"
+        },
+        "QueueTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "RepoName": {
+          "type": "string"
         }
       }
     },

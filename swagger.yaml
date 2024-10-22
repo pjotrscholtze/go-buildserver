@@ -4,6 +4,23 @@ info:
   version: 1.0.0
 basePath: /api
 paths:
+  /jobs:
+    get:
+      summary: Get jobs
+      operationId: listJobs
+      produces:
+      - application/json
+      - application/xml
+      responses:
+        '200':
+          description: Successful operation
+          schema:
+            type: array
+            xml:
+              name: jobs
+              wrapped: true
+            items:  
+              $ref: '#/definitions/Job'
   /repos:
     get:
       summary: Get repos
@@ -83,6 +100,18 @@ definitions:
         type: string
       Schedule:
         type: string
+  Job:
+    type: object
+    properties:
+      RepoName:
+        type: string
+      BuildReason:
+        type: string
+      Origin:
+        type: string
+      QueueTime:
+        type: string
+        format: date-time
   Repo:
     type: object
     properties:

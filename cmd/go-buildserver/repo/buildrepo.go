@@ -12,6 +12,7 @@ import (
 
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/config"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/process"
+	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/util"
 )
 
 type ResultStatus string
@@ -50,31 +51,33 @@ type buildRepo struct {
 }
 type BuildRepo interface {
 	GetRepoByName(name string) Repo
+	GetRepoBySlug(name string) Repo
 	List() []Repo
 }
-type buildResultLine struct {
+type BuildResultLine struct {
 	line string
 	pipe process.PipeType
 	time time.Time
 }
-type BuildResultLine interface {
-	Line() string
-	Pipe() process.PipeType
-	Time() time.Time
-}
 
-func (brl *buildResultLine) Line() string {
+// type BuildResultLine interface {
+// 	Line() string
+// 	Pipe() process.PipeType
+// 	Time() time.Time
+// }
+
+func (brl *BuildResultLine) Line() string {
 	return brl.line
 }
-func (brl *buildResultLine) Pipe() process.PipeType {
+func (brl *BuildResultLine) Pipe() process.PipeType {
 	return brl.pipe
 }
-func (brl *buildResultLine) Time() time.Time {
+func (brl *BuildResultLine) Time() time.Time {
 	return brl.time
 }
 
 type buildResult struct {
-	lines     []buildResultLine
+	lines     []BuildResultLine
 	reason    string
 	starttime time.Time
 	status    ResultStatus
@@ -89,7 +92,7 @@ type BuildResult interface {
 func (br *buildResult) Lines() []BuildResultLine {
 	res := make([]BuildResultLine, len(br.lines))
 	for i, _ := range br.lines {
-		res[i] = &br.lines[i]
+		res[i] = br.lines[i]
 	}
 	return res
 }
@@ -217,7 +220,7 @@ func (r *repo) Build(reason, origin, queueTime string) {
 	os.MkdirAll(repoPath, 0777)
 
 	results := &buildResult{
-		lines:     []buildResultLine{},
+		lines:     []BuildResultLine{},
 		reason:    reason,
 		starttime: time.Now(),
 		status:    RUNNING,
@@ -234,7 +237,7 @@ func (r *repo) Build(reason, origin, queueTime string) {
 	f, err := os.Create(path.Join(repoPath, "boot.sh"))
 	defer f.Close()
 	if err != nil {
-		results.lines = append(results.lines, []buildResultLine{
+		results.lines = append(results.lines, []BuildResultLine{
 			{
 				line: "Failed to create boot script:",
 				pipe: process.STDERR,
@@ -274,7 +277,7 @@ func (r *repo) Build(reason, origin, queueTime string) {
 
 	_, err = f.WriteString(strings.Join(bootScript, "\n"))
 	if err != nil {
-		results.lines = append(results.lines, []buildResultLine{
+		results.lines = append(results.lines, []BuildResultLine{
 			{
 				line: "Failed to write boot script:",
 				pipe: process.STDERR,
@@ -295,7 +298,7 @@ func (r *repo) Build(reason, origin, queueTime string) {
 		[]string{path.Join(repoPath, "boot.sh")},
 		func(pt process.PipeType, t time.Time, s string) {
 			r.resultsMutex.Lock()
-			results.lines = append(results.lines, buildResultLine{
+			results.lines = append(results.lines, BuildResultLine{
 				line: s,
 				pipe: pt,
 				time: t,
@@ -308,6 +311,15 @@ func (r *repo) Build(reason, origin, queueTime string) {
 func (br *buildRepo) GetRepoByName(name string) Repo {
 	for _, repo := range br.repos {
 		if repo.GetName() == name {
+			return repo
+		}
+	}
+	log.Fatalln("Repo not found!") // @todo decent error handling here!
+	return &repo{repo: br.config.Repos[0]}
+}
+func (br *buildRepo) GetRepoBySlug(name string) Repo {
+	for _, repo := range br.repos {
+		if util.StringToSlug(repo.GetName()) == name {
 			return repo
 		}
 	}

@@ -87,7 +87,7 @@ func main() {
 
 	t := &mock{
 		next: api.Serve(nil),
-		mux:  controller.RegisterUIController(),
+		mux:  controller.RegisterUIController(buildRepo, bq),
 	}
 	server.SetHandler(t)
 

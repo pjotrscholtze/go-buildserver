@@ -71,4 +71,7 @@ func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.BuildRe
 		buildQueue.AddQueueItem(sbp.Name, sbp.Reason, "HTTP")
 		return operations.NewStartBuildOK()
 	})
+	api.ListJobsHandler = operations.ListJobsHandlerFunc(func(ljp operations.ListJobsParams) middleware.Responder {
+		return operations.NewListJobsOK().WithPayload(buildQueue.List())
+	})
 }

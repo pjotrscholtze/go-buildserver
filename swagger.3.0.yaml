@@ -3,6 +3,30 @@ info:
   title: Go Buildserver
   version: 1.0.0
 paths:
+  /jobs:
+    get:
+      summary: Get jobs
+      operationId: listJobs
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                xml:
+                  name: jobs
+                  wrapped: true
+                items:  
+                  $ref: '#/components/schemas/Job'
+            application/xml:
+              schema:
+                type: array
+                xml:
+                  name: jobs
+                  wrapped: true
+                items:
+                  $ref: '#/components/schemas/Job'
   /repos:
     get:
       summary: Get repos
@@ -91,6 +115,18 @@ components:
           type: string
         Schedule:
           type: string
+    Job:
+      type: object
+      properties:
+        RepoName:
+          type: string
+        BuildReason:
+          type: string
+        Origin:
+          type: string
+        QueueTime:
+          type: string
+          format: date-time
     Repo:
       type: object
       properties:
