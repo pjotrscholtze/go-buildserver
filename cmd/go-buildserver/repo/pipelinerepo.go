@@ -46,15 +46,15 @@ func (rl *resultLine) GetLine() string {
 	return rl.line
 }
 
-type buildRepo struct {
-	repos            []Repo
+type pipelineRepo struct {
+	pipelines        []Pipeline
 	config           *config.Config
 	websocketmanager *websocketmanager.WebsocketManager
 }
-type BuildRepo interface {
-	GetRepoByName(name string) Repo
-	GetRepoBySlug(name string) Repo
-	List() []Repo
+type PipelineRepo interface {
+	GetRepoByName(name string) Pipeline
+	GetRepoBySlug(name string) Pipeline
+	List() []Pipeline
 }
 type BuildResultLine struct {
 	Line string
@@ -81,13 +81,13 @@ func (br *BuildResult) addLine(line BuildResultLine) {
 	br.Websocketmanager.BroadcastOnEndpoint("repo", "Go-Buildserver_Repo_clone_example", br)
 }
 
-type repo struct {
-	repo         config.Repo
+type pipeline struct {
+	pipeline     config.Pipeline
 	results      []*BuildResult
 	resultsMutex sync.Mutex
-	buildRepo    *buildRepo
+	buildRepo    *pipelineRepo
 }
-type Repo interface {
+type Pipeline interface {
 	Build(reason, origin, queueTime string)
 	GetBuildScript() string
 	ForceCleanBuild() bool
@@ -105,48 +105,48 @@ func min(a, b int) int {
 	}
 	return b
 }
-func (r *repo) GetLastNBuildResults(n int) []BuildResult {
-	r.resultsMutex.Lock()
-	defer r.resultsMutex.Unlock()
+func (p *pipeline) GetLastNBuildResults(n int) []BuildResult {
+	p.resultsMutex.Lock()
+	defer p.resultsMutex.Unlock()
 
 	if n < 0 {
-		n = len(r.results)
+		n = len(p.results)
 	}
-	res := make([]BuildResult, min(len(r.results), n))
+	res := make([]BuildResult, min(len(p.results), n))
 	for i := 0; i < len(res); i++ {
-		ind := len(r.results) - n + i
-		res[i] = *r.results[ind]
+		ind := len(p.results) - n + i
+		res[i] = *p.results[ind]
 	}
 
 	return res
 }
 
-func (r *repo) GetBuildScript() string {
-	return r.repo.BuildScript
+func (p *pipeline) GetBuildScript() string {
+	return p.pipeline.BuildScript
 }
 
-func (r *repo) ForceCleanBuild() bool {
-	return r.repo.ForceCleanBuild
+func (p *pipeline) ForceCleanBuild() bool {
+	return p.pipeline.ForceCleanBuild
 }
 
-func (r *repo) GetName() string {
-	return r.repo.Name
+func (p *pipeline) GetName() string {
+	return p.pipeline.Name
 }
 
-func (r *repo) GetPath() string {
-	return r.repo.Path
+func (p *pipeline) GetPath() string {
+	return p.pipeline.Path
 }
 
-func (r *repo) GetURL() string {
-	return r.repo.URL
+func (p *pipeline) GetURL() string {
+	return p.pipeline.URL
 }
-func (r *repo) GetTriggers() []config.Trigger {
-	return r.repo.Triggers
+func (p *pipeline) GetTriggers() []config.Trigger {
+	return p.pipeline.Triggers
 }
 
-func (r *repo) GetTriggersOfKind(filterKind string) []config.Trigger {
+func (p *pipeline) GetTriggersOfKind(filterKind string) []config.Trigger {
 	triggers := []config.Trigger{}
-	for _, trigger := range r.repo.Triggers {
+	for _, trigger := range p.pipeline.Triggers {
 		if trigger.Kind != filterKind {
 			continue
 		}
@@ -155,19 +155,19 @@ func (r *repo) GetTriggersOfKind(filterKind string) []config.Trigger {
 	return triggers
 }
 
-func (r *repo) printBuildStart(reason, origin, queueTime string) {
-	isRepoBased := len(r.GetURL()) > 0
-	log.Printf("Starting build for '%s', reason: %s, origin: %s, queuetime: %s", r.repo.Name, reason, origin, queueTime)
+func (p *pipeline) printBuildStart(reason, origin, queueTime string) {
+	isRepoBased := len(p.GetURL()) > 0
+	log.Printf("Starting build for '%s', reason: %s, origin: %s, queuetime: %s", p.pipeline.Name, reason, origin, queueTime)
 	log.Println("Build configuration:")
 	log.Printf("- Is repo based:%s\n", strconv.FormatBool(isRepoBased))
 	if isRepoBased {
-		log.Printf("- URL:%s\n", r.repo.URL)
+		log.Printf("- URL:%s\n", p.pipeline.URL)
 	} else {
-		log.Printf("- Path:%s\n", r.repo.Path)
+		log.Printf("- Path:%s\n", p.pipeline.Path)
 	}
-	log.Printf("- Name:%s\n", r.repo.Name)
-	log.Printf("- BuildScript:%s\n", r.repo.BuildScript)
-	log.Printf("- ForceCleanBuild:%s\n", r.repo.ForceCleanBuild)
+	log.Printf("- Name:%s\n", p.pipeline.Name)
+	log.Printf("- BuildScript:%s\n", p.pipeline.BuildScript)
+	log.Printf("- ForceCleanBuild:%s\n", p.pipeline.ForceCleanBuild)
 	log.Println("")
 }
 
@@ -180,15 +180,15 @@ func fileExists(path string) bool {
 	return false
 }
 
-func (r *repo) Build(reason, origin, queueTime string) {
-	r.printBuildStart(reason, origin, queueTime)
-	r.resultsMutex.Lock()
-	os.MkdirAll(r.buildRepo.config.WorkspaceDirectory, 0777)
+func (p *pipeline) Build(reason, origin, queueTime string) {
+	p.printBuildStart(reason, origin, queueTime)
+	p.resultsMutex.Lock()
+	os.MkdirAll(p.buildRepo.config.WorkspaceDirectory, 0777)
 
-	isRepoBased := len(r.GetURL()) > 0
-	repoPath := path.Join(r.buildRepo.config.WorkspaceDirectory, r.repo.Name)
+	isRepoBased := len(p.GetURL()) > 0
+	repoPath := path.Join(p.buildRepo.config.WorkspaceDirectory, p.pipeline.Name)
 	doClone := !fileExists(repoPath)
-	if isRepoBased && r.ForceCleanBuild() && !doClone {
+	if isRepoBased && p.ForceCleanBuild() && !doClone {
 		doClone = true
 		os.RemoveAll(repoPath)
 	}
@@ -199,16 +199,16 @@ func (r *repo) Build(reason, origin, queueTime string) {
 		Reason:           reason,
 		Starttime:        time.Now(),
 		Status:           RUNNING,
-		Websocketmanager: r.buildRepo.websocketmanager,
+		Websocketmanager: p.buildRepo.websocketmanager,
 	}
-	r.results = append(r.results, results)
-	if len(r.results) > int(r.buildRepo.config.MaxHistoryInMemory) {
-		r.results[0].Lines = nil
-		r.results = r.results[1:]
+	p.results = append(p.results, results)
+	if len(p.results) > int(p.buildRepo.config.MaxHistoryInMemory) {
+		p.results[0].Lines = nil
+		p.results = p.results[1:]
 	}
 
-	r.resultsMutex.Unlock()
-	gitPath := path.Join(repoPath, r.repo.Name)
+	p.resultsMutex.Unlock()
+	gitPath := path.Join(repoPath, p.pipeline.Name)
 
 	f, err := os.Create(path.Join(repoPath, "boot.sh"))
 	defer f.Close()
@@ -234,20 +234,20 @@ func (r *repo) Build(reason, origin, queueTime string) {
 	bootScript := []string{"#!/bin/sh"}
 	jobPath := gitPath
 	if !isRepoBased {
-		jobPath = r.GetPath()
+		jobPath = p.GetPath()
 	}
 	if isRepoBased {
 		bootScript = append(bootScript, []string{
 			"eval `ssh-agent`",
 			"ssh-agent &",
-			"ssh-add " + (*r).repo.SSHKeyLocation,
-			"git clone --depth 1 " + r.repo.URL + " " + gitPath,
+			"ssh-add " + (*p).pipeline.SSHKeyLocation,
+			"git clone --depth 1 " + p.pipeline.URL + " " + gitPath,
 		}...)
 	}
 
 	bootScript = append(bootScript, []string{
-		"chmod +x " + path.Join(jobPath, r.repo.BuildScript),
-		path.Join(jobPath, r.repo.BuildScript),
+		"chmod +x " + path.Join(jobPath, p.pipeline.BuildScript),
+		path.Join(jobPath, p.pipeline.BuildScript),
 	}...)
 	if isRepoBased {
 		bootScript = append(bootScript, "pkill ssh-agent")
@@ -277,7 +277,7 @@ func (r *repo) Build(reason, origin, queueTime string) {
 		"/bin/sh",
 		[]string{path.Join(repoPath, "boot.sh")},
 		func(pt process.PipeType, t time.Time, s string) {
-			r.resultsMutex.Lock()
+			p.resultsMutex.Lock()
 			results.addLine(BuildResultLine{
 				Line: s,
 				pipe: pt,
@@ -287,43 +287,43 @@ func (r *repo) Build(reason, origin, queueTime string) {
 				}[pt],
 				Time: t,
 			})
-			r.resultsMutex.Unlock()
+			p.resultsMutex.Unlock()
 		})
 	results.Status = FINISHED
 }
 
-func (br *buildRepo) GetRepoByName(name string) Repo {
-	for _, repo := range br.repos {
+func (br *pipelineRepo) GetRepoByName(name string) Pipeline {
+	for _, repo := range br.pipelines {
 		if repo.GetName() == name {
 			return repo
 		}
 	}
 	log.Fatalln("Repo not found!") // @todo decent error handling here!
-	return &repo{repo: br.config.Repos[0]}
+	return &pipeline{pipeline: br.config.Pipelines[0]}
 }
-func (br *buildRepo) GetRepoBySlug(name string) Repo {
-	for _, repo := range br.repos {
+func (br *pipelineRepo) GetRepoBySlug(name string) Pipeline {
+	for _, repo := range br.pipelines {
 		if util.StringToSlug(repo.GetName()) == name {
 			return repo
 		}
 	}
 	log.Fatalln("Repo not found!") // @todo decent error handling here!
-	return &repo{repo: br.config.Repos[0]}
+	return &pipeline{pipeline: br.config.Pipelines[0]}
 }
-func (br *buildRepo) List() []Repo {
-	return br.repos
+func (br *pipelineRepo) List() []Pipeline {
+	return br.pipelines
 }
 
-func NewBuildRepo(config *config.Config, wm *websocketmanager.WebsocketManager) BuildRepo {
-	br := &buildRepo{
+func NewPipelineRepo(config *config.Config, wm *websocketmanager.WebsocketManager) PipelineRepo {
+	br := &pipelineRepo{
 		config:           config,
 		websocketmanager: wm,
 	}
-	res := make([]Repo, len(br.config.Repos))
-	for i, elem := range br.config.Repos {
-		r := repo{repo: elem, buildRepo: br}
+	res := make([]Pipeline, len(br.config.Pipelines))
+	for i, elem := range br.config.Pipelines {
+		r := pipeline{pipeline: elem, buildRepo: br}
 		res[i] = &r
 	}
-	br.repos = res
+	br.pipelines = res
 	return br
 }

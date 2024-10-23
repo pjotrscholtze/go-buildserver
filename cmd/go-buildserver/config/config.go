@@ -12,7 +12,7 @@ type Trigger struct {
 	Schedule string
 }
 
-type Repo struct {
+type Pipeline struct {
 	Path            string
 	URL             string
 	SSHKeyLocation  string
@@ -27,7 +27,7 @@ type Config struct {
 	HTTPPort           int
 	HTTPHost           string
 	WorkspaceDirectory string
-	Repos              []Repo
+	Pipelines          []Pipeline
 }
 
 func LoadConfig(path string) Config {

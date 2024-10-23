@@ -2,7 +2,7 @@ MaxHistoryInMemory: 1
 HTTPPort: 3000
 HTTPHost: "0.0.0.0"
 WorkspaceDirectory: /tmp/go-buildserver
-Repos:
+Pipelines:
 - Path: ../../
   Name: Path_based_example
   BuildScript: ./build2.sh

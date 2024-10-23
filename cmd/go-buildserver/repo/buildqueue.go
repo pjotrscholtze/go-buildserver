@@ -10,16 +10,10 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-//	type buildQueueItem struct {
-//		RepoName    string
-//		BuildReason string
-//		Origin      string
-//		QueueTime   time.Time
-//	}
 type buildQueue struct {
 	items     []models.Job
 	lock      sync.Locker
-	buildRepo BuildRepo
+	buildRepo PipelineRepo
 	wm        *websocketmanager.WebsocketManager
 }
 
@@ -71,7 +65,7 @@ func (bq *buildQueue) AddQueueItem(repoName, buildReason, origin string) {
 	bq.wm.BroadcastOnEndpoint("jobs", "", bq.items)
 }
 
-func NewBuildQueue(buildRepo BuildRepo, cr *cron.Cron, wm *websocketmanager.WebsocketManager) BuildQueue {
+func NewBuildQueue(buildRepo PipelineRepo, cr *cron.Cron, wm *websocketmanager.WebsocketManager) BuildQueue {
 	bq := &buildQueue{
 		items:     []models.Job{},
 		lock:      &sync.Mutex{},

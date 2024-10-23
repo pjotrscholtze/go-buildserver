@@ -308,7 +308,7 @@ func StringToName(in string) string {
 
 	return id
 }
-func Menu(repos []repo.Repo) htmlwrapper.Elm {
+func Menu(repos []repo.Pipeline) htmlwrapper.Elm {
 	contents := []htmlwrapper.Elm{}
 	contents = append(contents,
 		&htmlwrapper.HTMLElm{

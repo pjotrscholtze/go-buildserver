@@ -7,7 +7,7 @@ import (
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/repo"
 )
 
-func Page(currentPath, basePath string, repos []repo.Repo, content htmlwrapper.Elm) (string, htmlwrapper.Elm) {
+func Page(currentPath, basePath string, repos []repo.Pipeline, content htmlwrapper.Elm) (string, htmlwrapper.Elm) {
 	menu := Menu(repos)
 	base := filepath.Base(currentPath)
 	ext := filepath.Ext(base)

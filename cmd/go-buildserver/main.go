@@ -48,7 +48,7 @@ func main() {
 	cr.Start()
 	wm := websocketmanager.NewWebsocketManager()
 
-	buildRepo := repo.NewBuildRepo(&c, &wm)
+	buildRepo := repo.NewPipelineRepo(&c, &wm)
 	bq := repo.NewBuildQueue(buildRepo, cr, &wm)
 	go bq.Run()
 
