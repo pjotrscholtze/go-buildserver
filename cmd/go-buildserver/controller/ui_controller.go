@@ -37,7 +37,7 @@ func wrapUITemplate(path string) bytes.Buffer {
 	return renderUITemplate(path, struct{}{})
 }
 
-func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.BuildQueue, wm websocketmanager.WebsocketManager) *http.ServeMux {
+func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue, wm websocketmanager.WebsocketManager) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir("../../static"))))

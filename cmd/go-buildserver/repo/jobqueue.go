@@ -10,20 +10,20 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-type buildQueue struct {
+type jobQueue struct {
 	items     []models.Job
 	lock      sync.Locker
 	buildRepo PipelineRepo
 	wm        *websocketmanager.WebsocketManager
 }
 
-type BuildQueue interface {
+type JobQueue interface {
 	Run()
 	AddQueueItem(repoName, buildReason, origin string)
 	List() []*models.Job
 }
 
-func (bq *buildQueue) List() []*models.Job {
+func (bq *jobQueue) List() []*models.Job {
 	out := []*models.Job{}
 	bq.lock.Lock()
 	defer bq.lock.Unlock()
@@ -34,7 +34,7 @@ func (bq *buildQueue) List() []*models.Job {
 	return out
 }
 
-func (bq *buildQueue) tick() *models.Job {
+func (bq *jobQueue) tick() *models.Job {
 	bq.lock.Lock()
 	defer bq.lock.Unlock()
 	if len(bq.items) == 0 {
@@ -44,7 +44,7 @@ func (bq *buildQueue) tick() *models.Job {
 	bq.items = bq.items[1:]
 	return item
 }
-func (bq *buildQueue) Run() {
+func (bq *jobQueue) Run() {
 	for {
 		if item := bq.tick(); item != nil {
 			bq.wm.BroadcastOnEndpoint("jobs", "", bq.items)
@@ -53,7 +53,7 @@ func (bq *buildQueue) Run() {
 		time.Sleep(50 * time.Millisecond)
 	}
 }
-func (bq *buildQueue) AddQueueItem(repoName, buildReason, origin string) {
+func (bq *jobQueue) AddQueueItem(repoName, buildReason, origin string) {
 	bq.lock.Lock()
 	defer bq.lock.Unlock()
 	bq.items = append(bq.items, models.Job{
@@ -65,8 +65,8 @@ func (bq *buildQueue) AddQueueItem(repoName, buildReason, origin string) {
 	bq.wm.BroadcastOnEndpoint("jobs", "", bq.items)
 }
 
-func NewBuildQueue(buildRepo PipelineRepo, cr *cron.Cron, wm *websocketmanager.WebsocketManager) BuildQueue {
-	bq := &buildQueue{
+func NewJobQueue(buildRepo PipelineRepo, cr *cron.Cron, wm *websocketmanager.WebsocketManager) JobQueue {
+	bq := &jobQueue{
 		items:     []models.Job{},
 		lock:      &sync.Mutex{},
 		buildRepo: buildRepo,

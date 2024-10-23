@@ -49,7 +49,7 @@ func main() {
 	wm := websocketmanager.NewWebsocketManager()
 
 	buildRepo := repo.NewPipelineRepo(&c, &wm)
-	bq := repo.NewBuildQueue(buildRepo, cr, &wm)
+	bq := repo.NewJobQueue(buildRepo, cr, &wm)
 	go bq.Run()
 
 	swaggerSpec, err := loads.Embedded(restapi.SwaggerJSON, restapi.FlatSwaggerJSON)

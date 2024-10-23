@@ -9,7 +9,7 @@ import (
 )
 
 // ConnectControllers with the API.
-func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.PipelineRepo, buildQueue repo.BuildQueue) {
+func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.PipelineRepo, buildQueue repo.JobQueue) {
 	api.ListReposHandler = operations.ListReposHandlerFunc(func(lrp operations.ListReposParams) middleware.Responder {
 		buildRepos := buildRepo.List()
 		payload := make([]*models.Repo, len(buildRepos))
