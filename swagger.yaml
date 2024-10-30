@@ -34,6 +34,25 @@ paths:
             items:  
               $ref: '#/definitions/Pipeline'
   /pipeline/{name}:
+    get:
+      summary: Start specific pipeline information
+      description: ''
+      operationId: getPipeline
+      consumes:
+      - application/json
+      - application/xml
+      parameters:
+        - name: name
+          in: path
+          required: true
+          type: string
+      responses:
+        '404':
+          description: Pipeline not found 
+        '200':
+          description: Pipeline infomation
+          schema:
+            $ref: '#/definitions/PipelineWithBuilds'
     post:
       summary: Start pipeline build
       description: ''
@@ -75,6 +94,8 @@ definitions:
   BuildResult:
     type: object
     properties:
+      Job:
+        $ref: '#/definitions/Job'
       StartTime:
         type: string
         format: date-time
@@ -98,7 +119,11 @@ definitions:
   Job:
     type: object
     properties:
+      ID:
+        type: integer
       RepoName:
+        type: string
+      Status:
         type: string
       BuildReason:
         type: string
@@ -132,3 +157,14 @@ definitions:
           wrapped: true
         items:
           $ref: '#/definitions/Trigger'
+  PipelineWithBuilds:
+    type: object
+    properties:
+      Pipeline:
+        $ref: '#/definitions/Pipeline'
+      Builds:
+        type: array
+        xml:
+          wrapped: true
+        items:
+          $ref: '#/definitions/Job'

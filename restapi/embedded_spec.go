@@ -50,6 +50,33 @@ func init() {
       }
     },
     "/pipeline/{name}": {
+      "get": {
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "summary": "Start specific pipeline information",
+        "operationId": "getPipeline",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pipeline infomation",
+            "schema": {
+              "$ref": "#/definitions/PipelineWithBuilds"
+            }
+          },
+          "404": {
+            "description": "Pipeline not found"
+          }
+        }
+      },
       "post": {
         "consumes": [
           "application/json",
@@ -114,6 +141,9 @@ func init() {
     "BuildResult": {
       "type": "object",
       "properties": {
+        "Job": {
+          "$ref": "#/definitions/Job"
+        },
         "Lines": {
           "type": "array",
           "items": {
@@ -156,6 +186,9 @@ func init() {
         "BuildReason": {
           "type": "string"
         },
+        "ID": {
+          "type": "integer"
+        },
         "Origin": {
           "type": "string"
         },
@@ -164,6 +197,9 @@ func init() {
           "format": "date-time"
         },
         "RepoName": {
+          "type": "string"
+        },
+        "Status": {
           "type": "string"
         }
       }
@@ -203,6 +239,23 @@ func init() {
         },
         "URL": {
           "type": "string"
+        }
+      }
+    },
+    "PipelineWithBuilds": {
+      "type": "object",
+      "properties": {
+        "Builds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Job"
+          },
+          "xml": {
+            "wrapped": true
+          }
+        },
+        "Pipeline": {
+          "$ref": "#/definitions/Pipeline"
         }
       }
     },
@@ -252,6 +305,33 @@ func init() {
       }
     },
     "/pipeline/{name}": {
+      "get": {
+        "consumes": [
+          "application/json",
+          "application/xml"
+        ],
+        "summary": "Start specific pipeline information",
+        "operationId": "getPipeline",
+        "parameters": [
+          {
+            "type": "string",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Pipeline infomation",
+            "schema": {
+              "$ref": "#/definitions/PipelineWithBuilds"
+            }
+          },
+          "404": {
+            "description": "Pipeline not found"
+          }
+        }
+      },
       "post": {
         "consumes": [
           "application/json",
@@ -316,6 +396,9 @@ func init() {
     "BuildResult": {
       "type": "object",
       "properties": {
+        "Job": {
+          "$ref": "#/definitions/Job"
+        },
         "Lines": {
           "type": "array",
           "items": {
@@ -358,6 +441,9 @@ func init() {
         "BuildReason": {
           "type": "string"
         },
+        "ID": {
+          "type": "integer"
+        },
         "Origin": {
           "type": "string"
         },
@@ -366,6 +452,9 @@ func init() {
           "format": "date-time"
         },
         "RepoName": {
+          "type": "string"
+        },
+        "Status": {
           "type": "string"
         }
       }
@@ -405,6 +494,23 @@ func init() {
         },
         "URL": {
           "type": "string"
+        }
+      }
+    },
+    "PipelineWithBuilds": {
+      "type": "object",
+      "properties": {
+        "Builds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Job"
+          },
+          "xml": {
+            "wrapped": true
+          }
+        },
+        "Pipeline": {
+          "$ref": "#/definitions/Pipeline"
         }
       }
     },

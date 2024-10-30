@@ -20,6 +20,9 @@ import (
 // swagger:model BuildResult
 type BuildResult struct {
 
+	// job
+	Job *Job `json:"Job,omitempty"`
+
 	// lines
 	Lines []*BuildResultLine `json:"Lines" xml:"Lines"`
 
@@ -38,6 +41,10 @@ type BuildResult struct {
 func (m *BuildResult) Validate(formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.validateJob(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateLines(formats); err != nil {
 		res = append(res, err)
 	}
@@ -49,6 +56,23 @@ func (m *BuildResult) Validate(formats strfmt.Registry) error {
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *BuildResult) validateJob(formats strfmt.Registry) error {
+	if swag.IsZero(m.Job) { // not required
+		return nil
+	}
+
+	if m.Job != nil {
+		if err := m.Job.Validate(formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("Job")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -92,6 +116,10 @@ func (m *BuildResult) validateStartTime(formats strfmt.Registry) error {
 func (m *BuildResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
+	if err := m.contextValidateJob(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateLines(ctx, formats); err != nil {
 		res = append(res, err)
 	}
@@ -99,6 +127,20 @@ func (m *BuildResult) ContextValidate(ctx context.Context, formats strfmt.Regist
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
+	return nil
+}
+
+func (m *BuildResult) contextValidateJob(ctx context.Context, formats strfmt.Registry) error {
+
+	if m.Job != nil {
+		if err := m.Job.ContextValidate(ctx, formats); err != nil {
+			if ve, ok := err.(*errors.Validation); ok {
+				return ve.ValidateName("Job")
+			}
+			return err
+		}
+	}
+
 	return nil
 }
 

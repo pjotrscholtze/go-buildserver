@@ -44,6 +44,9 @@ func NewGoBuildserverAPI(spec *loads.Document) *GoBuildserverAPI {
 
 		JSONProducer: runtime.JSONProducer(),
 
+		GetPipelineHandler: GetPipelineHandlerFunc(func(params GetPipelineParams) middleware.Responder {
+			return middleware.NotImplemented("operation GetPipeline has not yet been implemented")
+		}),
 		ListJobsHandler: ListJobsHandlerFunc(func(params ListJobsParams) middleware.Responder {
 			return middleware.NotImplemented("operation ListJobs has not yet been implemented")
 		}),
@@ -95,6 +98,8 @@ type GoBuildserverAPI struct {
 	//   - application/json
 	JSONProducer runtime.Producer
 
+	// GetPipelineHandler sets the operation handler for the get pipeline operation
+	GetPipelineHandler GetPipelineHandler
 	// ListJobsHandler sets the operation handler for the list jobs operation
 	ListJobsHandler ListJobsHandler
 	// ListPipelinesHandler sets the operation handler for the list pipelines operation
@@ -184,6 +189,9 @@ func (o *GoBuildserverAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.GetPipelineHandler == nil {
+		unregistered = append(unregistered, "GetPipelineHandler")
+	}
 	if o.ListJobsHandler == nil {
 		unregistered = append(unregistered, "ListJobsHandler")
 	}
@@ -285,6 +293,10 @@ func (o *GoBuildserverAPI) initHandlerCache() {
 		o.handlers = make(map[string]map[string]http.Handler)
 	}
 
+	if o.handlers["GET"] == nil {
+		o.handlers["GET"] = make(map[string]http.Handler)
+	}
+	o.handlers["GET"]["/pipeline/{name}"] = NewGetPipeline(o.context, o.GetPipelineHandler)
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}

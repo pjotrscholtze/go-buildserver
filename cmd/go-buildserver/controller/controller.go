@@ -9,15 +9,15 @@ import (
 )
 
 // ConnectControllers with the API.
-func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.PipelineRepo, buildQueue repo.JobQueue) {
+func ConnectControllers(api *operations.GoBuildserverAPI, pipelineRepo repo.PipelineRepo, jobQueue repo.JobQueue) {
 	api.ListPipelinesHandler = operations.ListPipelinesHandlerFunc(func(lrp operations.ListPipelinesParams) middleware.Responder {
-		buildRepos := buildRepo.List()
-		payload := make([]*models.Pipeline, len(buildRepos))
-		for i, buildRepo := range buildRepos {
+		pipelineRepos := pipelineRepo.List()
+		payload := make([]*models.Pipeline, len(pipelineRepos))
+		for i, pipelineRepo := range pipelineRepos {
 			var lbr repo.BuildResult
 			outputLbr := make([]*models.BuildResult, 0)
 
-			lbrs := buildRepo.GetLastNBuildResults(1)
+			lbrs := pipelineRepo.GetLastNBuildResults(1)
 			if len(lbrs) == 1 {
 				lbr = lbrs[0]
 				lines := make([]*models.BuildResultLine, 0)
@@ -36,13 +36,13 @@ func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.Pipelin
 				})
 			}
 
-			triggers := buildRepo.GetTriggers()
+			triggers := pipelineRepo.GetTriggers()
 			payload[i] = &models.Pipeline{
-				BuildScript:     buildRepo.GetBuildScript(),
-				ForceCleanBuild: buildRepo.ForceCleanBuild(),
-				Name:            buildRepo.GetName(),
-				URL:             buildRepo.GetURL(),
-				Path:            buildRepo.GetPath(),
+				BuildScript:     pipelineRepo.GetBuildScript(),
+				ForceCleanBuild: pipelineRepo.ForceCleanBuild(),
+				Name:            pipelineRepo.GetName(),
+				URL:             pipelineRepo.GetURL(),
+				Path:            pipelineRepo.GetPath(),
 				LastBuildResult: outputLbr,
 				Triggers:        make([]*models.Trigger, len(triggers)),
 			}
@@ -59,11 +59,39 @@ func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.Pipelin
 	})
 
 	api.StartPipelineHandler = operations.StartPipelineHandlerFunc(func(sbp operations.StartPipelineParams) middleware.Responder {
-		// buildRepo.GetRepoByName(sbp.Name).Build("HTTP: " + sbp.Reason)
-		buildQueue.AddQueueItem(sbp.Name, sbp.Reason, "HTTP")
+		// pipelineRepo.GetRepoByName(sbp.Name).Build("HTTP: " + sbp.Reason)
+		jobQueue.AddQueueItem(sbp.Name, sbp.Reason, "HTTP")
 		return operations.NewStartPipelineOK()
 	})
 	api.ListJobsHandler = operations.ListJobsHandlerFunc(func(ljp operations.ListJobsParams) middleware.Responder {
-		return operations.NewListJobsOK().WithPayload(buildQueue.List())
+		return operations.NewListJobsOK().WithPayload(jobQueue.List())
+	})
+
+	api.GetPipelineHandler = operations.GetPipelineHandlerFunc(func(gpp operations.GetPipelineParams) middleware.Responder {
+		pipeline := pipelineRepo.GetRepoBySlug(gpp.Name)
+		if pipeline == nil {
+			return operations.NewGetPipelineNotFound()
+		}
+		triggers := []*models.Trigger{}
+		for _, trigger := range pipeline.GetTriggers() {
+			triggers = append(triggers, &models.Trigger{
+				Kind:     trigger.Kind,
+				Schedule: trigger.Schedule,
+			})
+		}
+		buildResults := jobQueue.ListAllJobsOfPipeline(gpp.Name)
+
+		return operations.NewGetPipelineOK().WithPayload(&models.PipelineWithBuilds{
+			Pipeline: &models.Pipeline{
+				BuildScript:     pipeline.GetBuildScript(),
+				ForceCleanBuild: pipeline.ForceCleanBuild(),
+				LastBuildResult: nil,
+				Name:            pipeline.GetName(),
+				Path:            pipeline.GetPath(),
+				Triggers:        triggers,
+				URL:             pipeline.GetURL(),
+			},
+			Builds: buildResults,
+		})
 	})
 }

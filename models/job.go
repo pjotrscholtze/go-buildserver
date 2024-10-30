@@ -22,6 +22,9 @@ type Job struct {
 	// build reason
 	BuildReason string `json:"BuildReason,omitempty"`
 
+	// ID
+	ID int64 `json:"ID,omitempty"`
+
 	// origin
 	Origin string `json:"Origin,omitempty"`
 
@@ -31,6 +34,9 @@ type Job struct {
 
 	// repo name
 	RepoName string `json:"RepoName,omitempty"`
+
+	// status
+	Status string `json:"Status,omitempty"`
 }
 
 // Validate validates this job
