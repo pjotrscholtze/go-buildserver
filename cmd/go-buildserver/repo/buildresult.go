@@ -14,6 +14,7 @@ type BuildResultLine struct {
 	Time time.Time
 }
 type BuildResult struct {
+	PipelineName     string
 	Lines            []BuildResultLine
 	Reason           string
 	Starttime        time.Time

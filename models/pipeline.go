@@ -14,10 +14,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// Repo repo
+// Pipeline pipeline
 //
-// swagger:model Repo
-type Repo struct {
+// swagger:model Pipeline
+type Pipeline struct {
 
 	// build script
 	BuildScript string `json:"BuildScript,omitempty"`
@@ -41,8 +41,8 @@ type Repo struct {
 	URL string `json:"URL,omitempty"`
 }
 
-// Validate validates this repo
-func (m *Repo) Validate(formats strfmt.Registry) error {
+// Validate validates this pipeline
+func (m *Pipeline) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateLastBuildResult(formats); err != nil {
@@ -59,7 +59,7 @@ func (m *Repo) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Repo) validateLastBuildResult(formats strfmt.Registry) error {
+func (m *Pipeline) validateLastBuildResult(formats strfmt.Registry) error {
 	if swag.IsZero(m.LastBuildResult) { // not required
 		return nil
 	}
@@ -83,7 +83,7 @@ func (m *Repo) validateLastBuildResult(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *Repo) validateTriggers(formats strfmt.Registry) error {
+func (m *Pipeline) validateTriggers(formats strfmt.Registry) error {
 	if swag.IsZero(m.Triggers) { // not required
 		return nil
 	}
@@ -107,8 +107,8 @@ func (m *Repo) validateTriggers(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this repo based on the context it is used
-func (m *Repo) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this pipeline based on the context it is used
+func (m *Pipeline) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateLastBuildResult(ctx, formats); err != nil {
@@ -125,7 +125,7 @@ func (m *Repo) ContextValidate(ctx context.Context, formats strfmt.Registry) err
 	return nil
 }
 
-func (m *Repo) contextValidateLastBuildResult(ctx context.Context, formats strfmt.Registry) error {
+func (m *Pipeline) contextValidateLastBuildResult(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.LastBuildResult); i++ {
 
@@ -143,7 +143,7 @@ func (m *Repo) contextValidateLastBuildResult(ctx context.Context, formats strfm
 	return nil
 }
 
-func (m *Repo) contextValidateTriggers(ctx context.Context, formats strfmt.Registry) error {
+func (m *Pipeline) contextValidateTriggers(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Triggers); i++ {
 
@@ -162,7 +162,7 @@ func (m *Repo) contextValidateTriggers(ctx context.Context, formats strfmt.Regis
 }
 
 // MarshalBinary interface implementation
-func (m *Repo) MarshalBinary() ([]byte, error) {
+func (m *Pipeline) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -170,8 +170,8 @@ func (m *Repo) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *Repo) UnmarshalBinary(b []byte) error {
-	var res Repo
+func (m *Pipeline) UnmarshalBinary(b []byte) error {
+	var res Pipeline
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

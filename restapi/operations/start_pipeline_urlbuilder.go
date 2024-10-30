@@ -12,8 +12,8 @@ import (
 	"strings"
 )
 
-// StartBuildURL generates an URL for the start build operation
-type StartBuildURL struct {
+// StartPipelineURL generates an URL for the start pipeline operation
+type StartPipelineURL struct {
 	Name string
 
 	Reason string
@@ -26,7 +26,7 @@ type StartBuildURL struct {
 // WithBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *StartBuildURL) WithBasePath(bp string) *StartBuildURL {
+func (o *StartPipelineURL) WithBasePath(bp string) *StartPipelineURL {
 	o.SetBasePath(bp)
 	return o
 }
@@ -34,21 +34,21 @@ func (o *StartBuildURL) WithBasePath(bp string) *StartBuildURL {
 // SetBasePath sets the base path for this url builder, only required when it's different from the
 // base path specified in the swagger spec.
 // When the value of the base path is an empty string
-func (o *StartBuildURL) SetBasePath(bp string) {
+func (o *StartPipelineURL) SetBasePath(bp string) {
 	o._basePath = bp
 }
 
 // Build a url path and query string
-func (o *StartBuildURL) Build() (*url.URL, error) {
+func (o *StartPipelineURL) Build() (*url.URL, error) {
 	var _result url.URL
 
-	var _path = "/repos/{name}"
+	var _path = "/pipeline/{name}"
 
 	name := o.Name
 	if name != "" {
 		_path = strings.Replace(_path, "{name}", name, -1)
 	} else {
-		return nil, errors.New("name is required on StartBuildURL")
+		return nil, errors.New("name is required on StartPipelineURL")
 	}
 
 	_basePath := o._basePath
@@ -70,7 +70,7 @@ func (o *StartBuildURL) Build() (*url.URL, error) {
 }
 
 // Must is a helper function to panic when the url builder returns an error
-func (o *StartBuildURL) Must(u *url.URL, err error) *url.URL {
+func (o *StartPipelineURL) Must(u *url.URL, err error) *url.URL {
 	if err != nil {
 		panic(err)
 	}
@@ -81,17 +81,17 @@ func (o *StartBuildURL) Must(u *url.URL, err error) *url.URL {
 }
 
 // String returns the string representation of the path with query string
-func (o *StartBuildURL) String() string {
+func (o *StartPipelineURL) String() string {
 	return o.Must(o.Build()).String()
 }
 
 // BuildFull builds a full url with scheme, host, path and query string
-func (o *StartBuildURL) BuildFull(scheme, host string) (*url.URL, error) {
+func (o *StartPipelineURL) BuildFull(scheme, host string) (*url.URL, error) {
 	if scheme == "" {
-		return nil, errors.New("scheme is required for a full url on StartBuildURL")
+		return nil, errors.New("scheme is required for a full url on StartPipelineURL")
 	}
 	if host == "" {
-		return nil, errors.New("host is required for a full url on StartBuildURL")
+		return nil, errors.New("host is required for a full url on StartPipelineURL")
 	}
 
 	base, err := o.Build()
@@ -105,6 +105,6 @@ func (o *StartBuildURL) BuildFull(scheme, host string) (*url.URL, error) {
 }
 
 // StringFull returns the string representation of a complete url
-func (o *StartBuildURL) StringFull(scheme, host string) string {
+func (o *StartPipelineURL) StringFull(scheme, host string) string {
 	return o.Must(o.BuildFull(scheme, host)).String()
 }

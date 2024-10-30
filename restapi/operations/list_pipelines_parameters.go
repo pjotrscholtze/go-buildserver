@@ -12,19 +12,19 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 )
 
-// NewListReposParams creates a new ListReposParams object
+// NewListPipelinesParams creates a new ListPipelinesParams object
 //
 // There are no default values defined in the spec.
-func NewListReposParams() ListReposParams {
+func NewListPipelinesParams() ListPipelinesParams {
 
-	return ListReposParams{}
+	return ListPipelinesParams{}
 }
 
-// ListReposParams contains all the bound params for the list repos operation
+// ListPipelinesParams contains all the bound params for the list pipelines operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters listRepos
-type ListReposParams struct {
+// swagger:parameters listPipelines
+type ListPipelinesParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
@@ -33,8 +33,8 @@ type ListReposParams struct {
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls.
 //
-// To ensure default values, the struct must have been initialized with NewListReposParams() beforehand.
-func (o *ListReposParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+// To ensure default values, the struct must have been initialized with NewListPipelinesParams() beforehand.
+func (o *ListPipelinesParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
 	o.HTTPRequest = r

@@ -43,16 +43,15 @@ func NewGoBuildserverAPI(spec *loads.Document) *GoBuildserverAPI {
 		XMLConsumer:     runtime.XMLConsumer(),
 
 		JSONProducer: runtime.JSONProducer(),
-		XMLProducer:  runtime.XMLProducer(),
 
 		ListJobsHandler: ListJobsHandlerFunc(func(params ListJobsParams) middleware.Responder {
 			return middleware.NotImplemented("operation ListJobs has not yet been implemented")
 		}),
-		ListReposHandler: ListReposHandlerFunc(func(params ListReposParams) middleware.Responder {
-			return middleware.NotImplemented("operation ListRepos has not yet been implemented")
+		ListPipelinesHandler: ListPipelinesHandlerFunc(func(params ListPipelinesParams) middleware.Responder {
+			return middleware.NotImplemented("operation ListPipelines has not yet been implemented")
 		}),
-		StartBuildHandler: StartBuildHandlerFunc(func(params StartBuildParams) middleware.Responder {
-			return middleware.NotImplemented("operation StartBuild has not yet been implemented")
+		StartPipelineHandler: StartPipelineHandlerFunc(func(params StartPipelineParams) middleware.Responder {
+			return middleware.NotImplemented("operation StartPipeline has not yet been implemented")
 		}),
 	}
 }
@@ -95,16 +94,13 @@ type GoBuildserverAPI struct {
 	// JSONProducer registers a producer for the following mime types:
 	//   - application/json
 	JSONProducer runtime.Producer
-	// XMLProducer registers a producer for the following mime types:
-	//   - application/xml
-	XMLProducer runtime.Producer
 
 	// ListJobsHandler sets the operation handler for the list jobs operation
 	ListJobsHandler ListJobsHandler
-	// ListReposHandler sets the operation handler for the list repos operation
-	ListReposHandler ListReposHandler
-	// StartBuildHandler sets the operation handler for the start build operation
-	StartBuildHandler StartBuildHandler
+	// ListPipelinesHandler sets the operation handler for the list pipelines operation
+	ListPipelinesHandler ListPipelinesHandler
+	// StartPipelineHandler sets the operation handler for the start pipeline operation
+	StartPipelineHandler StartPipelineHandler
 
 	// ServeError is called when an error is received, there is a default handler
 	// but you can set your own with this
@@ -187,18 +183,15 @@ func (o *GoBuildserverAPI) Validate() error {
 	if o.JSONProducer == nil {
 		unregistered = append(unregistered, "JSONProducer")
 	}
-	if o.XMLProducer == nil {
-		unregistered = append(unregistered, "XMLProducer")
-	}
 
 	if o.ListJobsHandler == nil {
 		unregistered = append(unregistered, "ListJobsHandler")
 	}
-	if o.ListReposHandler == nil {
-		unregistered = append(unregistered, "ListReposHandler")
+	if o.ListPipelinesHandler == nil {
+		unregistered = append(unregistered, "ListPipelinesHandler")
 	}
-	if o.StartBuildHandler == nil {
-		unregistered = append(unregistered, "StartBuildHandler")
+	if o.StartPipelineHandler == nil {
+		unregistered = append(unregistered, "StartPipelineHandler")
 	}
 
 	if len(unregistered) > 0 {
@@ -252,8 +245,6 @@ func (o *GoBuildserverAPI) ProducersFor(mediaTypes []string) map[string]runtime.
 		switch mt {
 		case "application/json":
 			result["application/json"] = o.JSONProducer
-		case "application/xml":
-			result["application/xml"] = o.XMLProducer
 		}
 
 		if p, ok := o.customProducers[mt]; ok {
@@ -301,11 +292,11 @@ func (o *GoBuildserverAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/repos"] = NewListRepos(o.context, o.ListReposHandler)
+	o.handlers["GET"]["/pipelines"] = NewListPipelines(o.context, o.ListPipelinesHandler)
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
-	o.handlers["POST"]["/repos/{name}"] = NewStartBuild(o.context, o.StartBuildHandler)
+	o.handlers["POST"]["/pipeline/{name}"] = NewStartPipeline(o.context, o.StartPipelineHandler)
 }
 
 // Serve creates a http handler to serve the API over HTTP

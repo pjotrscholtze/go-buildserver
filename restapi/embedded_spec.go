@@ -28,8 +28,7 @@ func init() {
     "/jobs": {
       "get": {
         "produces": [
-          "application/json",
-          "application/xml"
+          "application/json"
         ],
         "summary": "Get jobs",
         "operationId": "listJobs",
@@ -50,40 +49,15 @@ func init() {
         }
       }
     },
-    "/repos": {
-      "get": {
-        "produces": [
-          "application/json",
-          "application/xml"
-        ],
-        "summary": "Get repos",
-        "operationId": "listRepos",
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Repo"
-              },
-              "xml": {
-                "name": "addresses",
-                "wrapped": true
-              }
-            }
-          }
-        }
-      }
-    },
-    "/repos/{name}": {
+    "/pipeline/{name}": {
       "post": {
         "consumes": [
           "application/json",
           "application/xml",
           "application/x-www-form-urlencoded"
         ],
-        "summary": "Start build",
-        "operationId": "startBuild",
+        "summary": "Start pipeline build",
+        "operationId": "startPipeline",
         "parameters": [
           {
             "type": "string",
@@ -110,7 +84,27 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Started build"
+            "description": "Queued pipeline"
+          }
+        }
+      }
+    },
+    "/pipelines": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get pipelines",
+        "operationId": "listPipelines",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Pipeline"
+              }
+            }
           }
         }
       }
@@ -174,7 +168,7 @@ func init() {
         }
       }
     },
-    "Repo": {
+    "Pipeline": {
       "type": "object",
       "properties": {
         "BuildScript": {
@@ -236,8 +230,7 @@ func init() {
     "/jobs": {
       "get": {
         "produces": [
-          "application/json",
-          "application/xml"
+          "application/json"
         ],
         "summary": "Get jobs",
         "operationId": "listJobs",
@@ -258,40 +251,15 @@ func init() {
         }
       }
     },
-    "/repos": {
-      "get": {
-        "produces": [
-          "application/json",
-          "application/xml"
-        ],
-        "summary": "Get repos",
-        "operationId": "listRepos",
-        "responses": {
-          "200": {
-            "description": "Successful operation",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Repo"
-              },
-              "xml": {
-                "name": "addresses",
-                "wrapped": true
-              }
-            }
-          }
-        }
-      }
-    },
-    "/repos/{name}": {
+    "/pipeline/{name}": {
       "post": {
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded",
           "application/xml"
         ],
-        "summary": "Start build",
-        "operationId": "startBuild",
+        "summary": "Start pipeline build",
+        "operationId": "startPipeline",
         "parameters": [
           {
             "type": "string",
@@ -318,7 +286,27 @@ func init() {
         ],
         "responses": {
           "200": {
-            "description": "Started build"
+            "description": "Queued pipeline"
+          }
+        }
+      }
+    },
+    "/pipelines": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Get pipelines",
+        "operationId": "listPipelines",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Pipeline"
+              }
+            }
           }
         }
       }
@@ -382,7 +370,7 @@ func init() {
         }
       }
     },
-    "Repo": {
+    "Pipeline": {
       "type": "object",
       "properties": {
         "BuildScript": {

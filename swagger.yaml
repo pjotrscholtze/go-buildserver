@@ -10,7 +10,6 @@ paths:
       operationId: listJobs
       produces:
       - application/json
-      - application/xml
       responses:
         '200':
           description: Successful operation
@@ -21,28 +20,24 @@ paths:
               wrapped: true
             items:  
               $ref: '#/definitions/Job'
-  /repos:
+  /pipelines:
     get:
-      summary: Get repos
-      operationId: listRepos
+      summary: Get pipelines
+      operationId: listPipelines
       produces:
       - application/json
-      - application/xml
       responses:
         '200':
           description: Successful operation
           schema:
             type: array
-            xml:
-              name: addresses
-              wrapped: true
             items:  
-              $ref: '#/definitions/Repo'
-  /repos/{name}:
+              $ref: '#/definitions/Pipeline'
+  /pipeline/{name}:
     post:
-      summary: Start build
+      summary: Start pipeline build
       description: ''
-      operationId: startBuild
+      operationId: startPipeline
       consumes:
       - application/json
       - application/xml
@@ -65,7 +60,7 @@ paths:
           required: true
       responses:
         '200':
-          description: Started build
+          description: Queued pipeline
 definitions:
   BuildResultLine:
     type: object
@@ -112,7 +107,7 @@ definitions:
       QueueTime:
         type: string
         format: date-time
-  Repo:
+  Pipeline:
     type: object
     properties:
       LastBuildResult:

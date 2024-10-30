@@ -19,18 +19,10 @@ paths:
                   wrapped: true
                 items:  
                   $ref: '#/components/schemas/Job'
-            application/xml:
-              schema:
-                type: array
-                xml:
-                  name: jobs
-                  wrapped: true
-                items:
-                  $ref: '#/components/schemas/Job'
-  /repos:
+  /pipelines:
     get:
-      summary: Get repos
-      operationId: listRepos
+      summary: Get pipelines
+      operationId: listPipelines
       responses:
         '200':
           description: Successful operation
@@ -39,23 +31,15 @@ paths:
               schema:
                 type: array
                 xml:
-                  name: addresses
+                  name: pipelines
                   wrapped: true
                 items:  
-                  $ref: '#/components/schemas/Repo'
-            application/xml:
-              schema:
-                type: array
-                xml:
-                  name: addresses
-                  wrapped: true
-                items:
-                  $ref: '#/components/schemas/Repo'
-  /repos/{name}:
+                  $ref: '#/components/schemas/Pipeline'
+  /pipeline/{name}:
     post:
-      summary: Start build
+      summary: Start pipeline
       description: ''
-      operationId: startBuild
+      operationId: startPipeline
       parameters:
         - name: name
           in: path
@@ -79,7 +63,7 @@ paths:
         required: true
       responses:
         '200':
-          description: Started build
+          description: Started pipeline
 components:
   schemas:
     BuildResultLine:
@@ -118,7 +102,7 @@ components:
     Job:
       type: object
       properties:
-        RepoName:
+        PipelineName:
           type: string
         BuildReason:
           type: string
@@ -127,7 +111,7 @@ components:
         QueueTime:
           type: string
           format: date-time
-    Repo:
+    Pipeline:
       type: object
       properties:
         LastBuildResult:

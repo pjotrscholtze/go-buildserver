@@ -10,9 +10,9 @@ import (
 
 // ConnectControllers with the API.
 func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.PipelineRepo, buildQueue repo.JobQueue) {
-	api.ListReposHandler = operations.ListReposHandlerFunc(func(lrp operations.ListReposParams) middleware.Responder {
+	api.ListPipelinesHandler = operations.ListPipelinesHandlerFunc(func(lrp operations.ListPipelinesParams) middleware.Responder {
 		buildRepos := buildRepo.List()
-		payload := make([]*models.Repo, len(buildRepos))
+		payload := make([]*models.Pipeline, len(buildRepos))
 		for i, buildRepo := range buildRepos {
 			var lbr repo.BuildResult
 			outputLbr := make([]*models.BuildResult, 0)
@@ -37,7 +37,7 @@ func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.Pipelin
 			}
 
 			triggers := buildRepo.GetTriggers()
-			payload[i] = &models.Repo{
+			payload[i] = &models.Pipeline{
 				BuildScript:     buildRepo.GetBuildScript(),
 				ForceCleanBuild: buildRepo.ForceCleanBuild(),
 				Name:            buildRepo.GetName(),
@@ -55,13 +55,13 @@ func ConnectControllers(api *operations.GoBuildserverAPI, buildRepo repo.Pipelin
 			}
 		}
 
-		return operations.NewListReposOK().WithPayload(payload)
+		return operations.NewListPipelinesOK().WithPayload(payload)
 	})
 
-	api.StartBuildHandler = operations.StartBuildHandlerFunc(func(sbp operations.StartBuildParams) middleware.Responder {
+	api.StartPipelineHandler = operations.StartPipelineHandlerFunc(func(sbp operations.StartPipelineParams) middleware.Responder {
 		// buildRepo.GetRepoByName(sbp.Name).Build("HTTP: " + sbp.Reason)
 		buildQueue.AddQueueItem(sbp.Name, sbp.Reason, "HTTP")
-		return operations.NewStartBuildOK()
+		return operations.NewStartPipelineOK()
 	})
 	api.ListJobsHandler = operations.ListJobsHandlerFunc(func(ljp operations.ListJobsParams) middleware.Responder {
 		return operations.NewListJobsOK().WithPayload(buildQueue.List())

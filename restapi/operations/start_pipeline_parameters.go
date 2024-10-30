@@ -16,19 +16,19 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// NewStartBuildParams creates a new StartBuildParams object
+// NewStartPipelineParams creates a new StartPipelineParams object
 //
 // There are no default values defined in the spec.
-func NewStartBuildParams() StartBuildParams {
+func NewStartPipelineParams() StartPipelineParams {
 
-	return StartBuildParams{}
+	return StartPipelineParams{}
 }
 
-// StartBuildParams contains all the bound params for the start build operation
+// StartPipelineParams contains all the bound params for the start pipeline operation
 // typically these are obtained from a http.Request
 //
-// swagger:parameters startBuild
-type StartBuildParams struct {
+// swagger:parameters startPipeline
+type StartPipelineParams struct {
 
 	// HTTP Request Object
 	HTTPRequest *http.Request `json:"-"`
@@ -53,8 +53,8 @@ type StartBuildParams struct {
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
 // for simple values it will use straight method calls.
 //
-// To ensure default values, the struct must have been initialized with NewStartBuildParams() beforehand.
-func (o *StartBuildParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
+// To ensure default values, the struct must have been initialized with NewStartPipelineParams() beforehand.
+func (o *StartPipelineParams) BindRequest(r *http.Request, route *middleware.MatchedRoute) error {
 	var res []error
 
 	o.HTTPRequest = r
@@ -94,7 +94,7 @@ func (o *StartBuildParams) BindRequest(r *http.Request, route *middleware.Matche
 }
 
 // bindName binds and validates parameter Name from path.
-func (o *StartBuildParams) bindName(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *StartPipelineParams) bindName(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	var raw string
 	if len(rawData) > 0 {
 		raw = rawData[len(rawData)-1]
@@ -108,7 +108,7 @@ func (o *StartBuildParams) bindName(rawData []string, hasKey bool, formats strfm
 }
 
 // bindReason binds and validates parameter Reason from query.
-func (o *StartBuildParams) bindReason(rawData []string, hasKey bool, formats strfmt.Registry) error {
+func (o *StartPipelineParams) bindReason(rawData []string, hasKey bool, formats strfmt.Registry) error {
 	if !hasKey {
 		return errors.Required("reason", "query", rawData)
 	}

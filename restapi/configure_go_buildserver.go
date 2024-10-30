@@ -38,16 +38,20 @@ func configureAPI(api *operations.GoBuildserverAPI) http.Handler {
 	api.XMLConsumer = runtime.XMLConsumer()
 
 	api.JSONProducer = runtime.JSONProducer()
-	api.XMLProducer = runtime.XMLProducer()
 
-	if api.ListReposHandler == nil {
-		api.ListReposHandler = operations.ListReposHandlerFunc(func(params operations.ListReposParams) middleware.Responder {
-			return middleware.NotImplemented("operation operations.ListRepos has not yet been implemented")
+	if api.ListJobsHandler == nil {
+		api.ListJobsHandler = operations.ListJobsHandlerFunc(func(params operations.ListJobsParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.ListJobs has not yet been implemented")
 		})
 	}
-	if api.StartBuildHandler == nil {
-		api.StartBuildHandler = operations.StartBuildHandlerFunc(func(params operations.StartBuildParams) middleware.Responder {
-			return middleware.NotImplemented("operation operations.StartBuild has not yet been implemented")
+	if api.ListPipelinesHandler == nil {
+		api.ListPipelinesHandler = operations.ListPipelinesHandlerFunc(func(params operations.ListPipelinesParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.ListPipelines has not yet been implemented")
+		})
+	}
+	if api.StartPipelineHandler == nil {
+		api.StartPipelineHandler = operations.StartPipelineHandlerFunc(func(params operations.StartPipelineParams) middleware.Responder {
+			return middleware.NotImplemented("operation operations.StartPipeline has not yet been implemented")
 		})
 	}
 
