@@ -12,6 +12,7 @@ import (
 
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/config"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/process"
+	"github.com/pjotrscholtze/go-buildserver/models"
 )
 
 type pipeline struct {
@@ -22,7 +23,7 @@ type pipeline struct {
 }
 
 type Pipeline interface {
-	Build(reason, origin, queueTime string)
+	Build(job *models.Job)
 	GetBuildScript() string
 	ForceCleanBuild() bool
 	GetName() string
@@ -31,6 +32,16 @@ type Pipeline interface {
 	GetTriggers() []config.Trigger
 	GetTriggersOfKind(filterKind string) []config.Trigger
 	GetLastNBuildResults(n int) []BuildResult
+	GetBuildResultForJobID(job *models.Job) *BuildResult
+}
+
+func (p *pipeline) GetBuildResultForJobID(job *models.Job) *BuildResult {
+	for _, pline := range p.results {
+		if pline.Job == job {
+			return pline
+		}
+	}
+	return nil
 }
 
 func (p *pipeline) GetLastNBuildResults(n int) []BuildResult {
@@ -98,7 +109,11 @@ func (p *pipeline) printBuildStart(reason, origin, queueTime string) {
 	log.Printf("- ForceCleanBuild:%s\n", p.pipeline.ForceCleanBuild)
 	log.Println("")
 }
-func (p *pipeline) Build(reason, origin, queueTime string) {
+func (p *pipeline) Build(job *models.Job) {
+	if job == nil {
+		// @todo error handling here.
+	}
+	reason, origin, queueTime := job.BuildReason, job.Origin, job.QueueTime.String()
 	p.printBuildStart(reason, origin, queueTime)
 	p.resultsMutex.Lock()
 	os.MkdirAll(p.buildRepo.config.WorkspaceDirectory, 0777)
@@ -118,6 +133,7 @@ func (p *pipeline) Build(reason, origin, queueTime string) {
 		Starttime:        time.Now(),
 		Status:           RUNNING,
 		Websocketmanager: p.buildRepo.websocketmanager,
+		Job:              job,
 	}
 	p.results = append(p.results, results)
 	if len(p.results) > int(p.buildRepo.config.MaxHistoryInMemory) {
@@ -208,4 +224,5 @@ func (p *pipeline) Build(reason, origin, queueTime string) {
 			p.resultsMutex.Unlock()
 		})
 	results.Status = FINISHED
+	results.Websocketmanager.BroadcastOnEndpoint("build", strconv.FormatInt(results.Job.ID, 10), results)
 }

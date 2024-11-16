@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-openapi/loads"
+	"github.com/gorilla/mux"
 	flags "github.com/jessevdk/go-flags"
 
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/config"
@@ -20,7 +21,7 @@ import (
 
 type mock struct {
 	next http.Handler
-	mux  *http.ServeMux
+	mux  *mux.Router
 }
 
 func (m *mock) ServeHTTP(w http.ResponseWriter, r *http.Request) {

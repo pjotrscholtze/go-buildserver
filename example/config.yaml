@@ -1,4 +1,4 @@
-MaxHistoryInMemory: 1
+MaxHistoryInMemory: 999999999999
 HTTPPort: 3000
 HTTPHost: "0.0.0.0"
 WorkspaceDirectory: /tmp/go-buildserver
