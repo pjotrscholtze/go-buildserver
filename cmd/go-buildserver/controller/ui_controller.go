@@ -117,7 +117,11 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 		lastBuildStatus := ""
 		lastBuildReason := ""
 		lastBuildStarttime := ""
-		lines := []repo.BuildResultLine{}
+		lines := []repo.BuildResultLine{{
+			Line: "",
+			Pipe: "",
+			Time: strfmt.UnixZero,
+		}}
 		if len(lastBuilds) == 1 {
 			lastBuild := lastBuilds[0]
 			lastBuildStatus = string(lastBuild.Status)
@@ -243,7 +247,21 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 		jobBuilder := buildRepo.GetRepoByName(job.RepoName)
 		buildResult := jobBuilder.GetBuildResultForJobID(job)
 		if buildResult == nil {
-			// @todo error
+			buildResult = &repo.BuildResult{
+				PipelineName: job.RepoName,
+				Lines: []repo.BuildResultLine{
+					{
+						Line: "",
+						Pipe: "",
+						Time: strfmt.UnixZero,
+					},
+				},
+				Reason:           job.BuildReason,
+				Starttime:        time.Time(job.QueueTime),
+				Status:           repo.ResultStatus(job.Status),
+				Websocketmanager: nil,
+				Job:              job,
+			}
 		}
 
 		buildMeta := &htmlwrapper.HTMLElm{
@@ -504,7 +522,20 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 		if end > int64(len(lastBuilds)) {
 			end = int64(len(lastBuilds))
 		}
-		tb := builder.NewAdvancedTableBuilder[models.Job](lastBuilds[start:end])
+		buildsForTable := lastBuilds[start:end]
+		noRows := false
+		if len(buildsForTable) == 0 {
+			noRows = true
+			buildsForTable = []models.Job{models.Job{
+				BuildReason: "",
+				ID:          -1,
+				Origin:      "",
+				QueueTime:   strfmt.DateTime{},
+				RepoName:    repoName,
+				Status:      "",
+			}}
+		}
+		tb := builder.NewAdvancedTableBuilder[models.Job](buildsForTable)
 		tb.GetPaginationBuilder().SetCurrentPage(int(pageNumber)).
 			SetCurrentResultsPerPage(int(numberOfResultsPerPage)).
 			SetResultCount(len(lastBuilds)).
@@ -529,6 +560,9 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 		})
 		tableElm := tb.AsElm().(*htmlwrapper.HTMLElm)
 		tableElm.Attrs = nil
+		if noRows {
+			tableElm.Contents[1].(*htmlwrapper.HTMLElm).Contents[1].(*htmlwrapper.HTMLElm).Contents = nil
+		}
 
 		requestURI := r.RequestURI
 		title, elm := view.Page(
