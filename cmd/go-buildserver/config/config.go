@@ -23,11 +23,14 @@ type Pipeline struct {
 }
 
 type Config struct {
-	MaxHistoryInMemory uint
-	HTTPPort           int
-	HTTPHost           string
-	WorkspaceDirectory string
-	Pipelines          []Pipeline
+	MaxHistoryInMemory  uint
+	HTTPPort            int
+	HTTPHost            string
+	WorkspaceDirectory  string
+	Pipelines           []Pipeline
+	SQLDriver           string
+	SQLConnectionString string
+	DBMigrations        string
 }
 
 func LoadConfig(path string) Config {

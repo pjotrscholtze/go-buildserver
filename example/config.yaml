@@ -2,6 +2,9 @@ MaxHistoryInMemory: 999999999999
 HTTPPort: 3000
 HTTPHost: "0.0.0.0"
 WorkspaceDirectory: /tmp/go-buildserver
+SQLDriver: sqlite3
+SQLConnectionString: ":memory:"
+DBMigrations: ../../db_migrations
 Pipelines:
 - Path: ../../
   Name: Path_based_example
