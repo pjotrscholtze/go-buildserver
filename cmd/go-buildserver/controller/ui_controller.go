@@ -56,7 +56,7 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 				Tag: "li",
 				Contents: []htmlwrapper.Elm{
 					&htmlwrapper.HTMLElm{Tag: "strong", Contents: []htmlwrapper.Elm{htmlwrapper.Text("Name: ")}},
-					htmlwrapper.Text(currentRepo.GetName()),
+					htmlwrapper.Text(currentRepo.GetPipelineConfig().Name),
 				},
 			},
 			&htmlwrapper.HTMLElm{
@@ -66,28 +66,28 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 					htmlwrapper.Text(map[bool]string{
 						true:  "Yes",
 						false: "No",
-					}[currentRepo.ForceCleanBuild()]),
+					}[currentRepo.GetPipelineConfig().ForceCleanBuild]),
 				},
 			},
 			&htmlwrapper.HTMLElm{
 				Tag: "li",
 				Contents: []htmlwrapper.Elm{
 					&htmlwrapper.HTMLElm{Tag: "strong", Contents: []htmlwrapper.Elm{htmlwrapper.Text("Repo path: ")}},
-					htmlwrapper.Text(currentRepo.GetPath()),
+					htmlwrapper.Text(currentRepo.GetPipelineConfig().Path),
 				},
 			},
 			&htmlwrapper.HTMLElm{
 				Tag: "li",
 				Contents: []htmlwrapper.Elm{
 					&htmlwrapper.HTMLElm{Tag: "strong", Contents: []htmlwrapper.Elm{htmlwrapper.Text("URL: ")}},
-					htmlwrapper.Text(currentRepo.GetURL()),
+					htmlwrapper.Text(currentRepo.GetPipelineConfig().URL),
 				},
 			},
 			&htmlwrapper.HTMLElm{
 				Tag: "li",
 				Contents: []htmlwrapper.Elm{
 					&htmlwrapper.HTMLElm{Tag: "strong", Contents: []htmlwrapper.Elm{htmlwrapper.Text("Build script: ")}},
-					htmlwrapper.Text(currentRepo.GetBuildScript()),
+					htmlwrapper.Text(currentRepo.GetPipelineConfig().BuildScript),
 				},
 			},
 		}
@@ -109,7 +109,7 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 			Tag: "ul",
 			Attrs: map[string]string{
 				"class":     "properties",
-				"data-repo": currentRepo.GetName(),
+				"data-repo": currentRepo.GetPipelineConfig().Name,
 			},
 			Contents: repoProperties,
 		}
@@ -328,14 +328,14 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 					},
 					Contents: []htmlwrapper.Elm{
 						&htmlwrapper.HTMLElm{Tag: "strong", Contents: []htmlwrapper.Elm{htmlwrapper.Text("Repo URL: ")}},
-						&htmlwrapper.HTMLElm{Tag: "span", Contents: []htmlwrapper.Elm{htmlwrapper.Text(jobBuilder.GetURL())}},
+						&htmlwrapper.HTMLElm{Tag: "span", Contents: []htmlwrapper.Elm{htmlwrapper.Text(jobBuilder.GetPipelineConfig().URL)}},
 					},
 				},
 				&htmlwrapper.HTMLElm{
 					Tag: "li",
 					Contents: []htmlwrapper.Elm{
 						&htmlwrapper.HTMLElm{Tag: "strong", Contents: []htmlwrapper.Elm{htmlwrapper.Text("Repo path: ")}},
-						htmlwrapper.Text(jobBuilder.GetPath()),
+						htmlwrapper.Text(jobBuilder.GetPipelineConfig().Path),
 					},
 				},
 				&htmlwrapper.HTMLElm{
@@ -442,7 +442,7 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 				Tag: "li",
 				Contents: []htmlwrapper.Elm{
 					&htmlwrapper.HTMLElm{Tag: "strong", Contents: []htmlwrapper.Elm{htmlwrapper.Text("Name: ")}},
-					htmlwrapper.Text(currentRepo.GetName()),
+					htmlwrapper.Text(currentRepo.GetPipelineConfig().Name),
 				},
 			},
 			&htmlwrapper.HTMLElm{
@@ -452,28 +452,28 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 					htmlwrapper.Text(map[bool]string{
 						true:  "Yes",
 						false: "No",
-					}[currentRepo.ForceCleanBuild()]),
+					}[currentRepo.GetPipelineConfig().ForceCleanBuild]),
 				},
 			},
 			&htmlwrapper.HTMLElm{
 				Tag: "li",
 				Contents: []htmlwrapper.Elm{
 					&htmlwrapper.HTMLElm{Tag: "strong", Contents: []htmlwrapper.Elm{htmlwrapper.Text("Repo path: ")}},
-					htmlwrapper.Text(currentRepo.GetPath()),
+					htmlwrapper.Text(currentRepo.GetPipelineConfig().Path),
 				},
 			},
 			&htmlwrapper.HTMLElm{
 				Tag: "li",
 				Contents: []htmlwrapper.Elm{
 					&htmlwrapper.HTMLElm{Tag: "strong", Contents: []htmlwrapper.Elm{htmlwrapper.Text("URL: ")}},
-					htmlwrapper.Text(currentRepo.GetURL()),
+					htmlwrapper.Text(currentRepo.GetPipelineConfig().URL),
 				},
 			},
 			&htmlwrapper.HTMLElm{
 				Tag: "li",
 				Contents: []htmlwrapper.Elm{
 					&htmlwrapper.HTMLElm{Tag: "strong", Contents: []htmlwrapper.Elm{htmlwrapper.Text("Build script: ")}},
-					htmlwrapper.Text(currentRepo.GetBuildScript()),
+					htmlwrapper.Text(currentRepo.GetPipelineConfig().BuildScript),
 				},
 			},
 		}
@@ -507,12 +507,12 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 			Tag: "ul",
 			Attrs: map[string]string{
 				"class":     "properties",
-				"data-repo": currentRepo.GetName(),
+				"data-repo": currentRepo.GetPipelineConfig().Name,
 			},
 			Contents: repoProperties,
 		}
 		lastBuilds := []models.Job{}
-		for _, br := range buildQueue.ListAllJobsOfPipeline(currentRepo.GetName()) {
+		for _, br := range buildQueue.ListAllJobsOfPipeline(currentRepo.GetPipelineConfig().Name) {
 			lastBuilds = append([]models.Job{*br}, lastBuilds...)
 		}
 		start := numberOfResultsPerPage * (pageNumber - 1)

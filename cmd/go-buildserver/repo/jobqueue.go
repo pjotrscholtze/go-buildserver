@@ -108,7 +108,7 @@ func NewJobQueue(buildRepo PipelineRepo, cr *cron.Cron, wm *websocketmanager.Web
 	for _, repo := range buildRepo.List() {
 		for _, trigger := range repo.GetTriggersOfKind("Cron") {
 			cr.AddFunc(trigger.Schedule, func() {
-				bq.AddQueueItem(repo.GetName(), trigger.Schedule, "cron")
+				bq.AddQueueItem(repo.GetPipelineConfig().Name, trigger.Schedule, "cron")
 			})
 		}
 	}

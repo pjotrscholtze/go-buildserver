@@ -39,7 +39,7 @@ func fileExists(path string) bool {
 
 func (br *pipelineRepo) GetRepoByName(name string) Pipeline {
 	for _, repo := range br.pipelines {
-		if repo.GetName() == name {
+		if repo.GetPipelineConfig().Name == name {
 			return repo
 		}
 	}
@@ -48,7 +48,7 @@ func (br *pipelineRepo) GetRepoByName(name string) Pipeline {
 }
 func (br *pipelineRepo) GetRepoBySlug(name string) Pipeline {
 	for _, repo := range br.pipelines {
-		if util.StringToSlug(repo.GetName()) == name {
+		if util.StringToSlug(repo.GetPipelineConfig().Name) == name {
 			return repo
 		}
 	}

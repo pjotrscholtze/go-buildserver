@@ -228,10 +228,10 @@ func Menu(repos []repo.Pipeline) htmlwrapper.Elm {
 				&htmlwrapper.HTMLElm{
 					Tag: "a",
 					Attrs: map[string]string{
-						"href": "/repo/" + util.StringToSlug(repo.GetName()),
+						"href": "/repo/" + util.StringToSlug(repo.GetPipelineConfig().Name),
 					},
 					Contents: []htmlwrapper.Elm{
-						htmlwrapper.Text(repo.GetName()),
+						htmlwrapper.Text(repo.GetPipelineConfig().Name),
 					}}}})
 	}
 

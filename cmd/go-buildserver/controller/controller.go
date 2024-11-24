@@ -39,11 +39,11 @@ func ConnectControllers(api *operations.GoBuildserverAPI, pipelineRepo repo.Pipe
 
 			triggers := pipelineRepo.GetTriggers()
 			payload[i] = &models.Pipeline{
-				BuildScript:     pipelineRepo.GetBuildScript(),
-				ForceCleanBuild: pipelineRepo.ForceCleanBuild(),
-				Name:            pipelineRepo.GetName(),
-				URL:             pipelineRepo.GetURL(),
-				Path:            pipelineRepo.GetPath(),
+				BuildScript:     pipelineRepo.GetPipelineConfig().BuildScript,
+				ForceCleanBuild: pipelineRepo.GetPipelineConfig().ForceCleanBuild,
+				Name:            pipelineRepo.GetPipelineConfig().Name,
+				URL:             pipelineRepo.GetPipelineConfig().URL,
+				Path:            pipelineRepo.GetPipelineConfig().Path,
 				LastBuildResult: outputLbr,
 				Triggers:        make([]*models.Trigger, len(triggers)),
 			}
@@ -84,13 +84,13 @@ func ConnectControllers(api *operations.GoBuildserverAPI, pipelineRepo repo.Pipe
 
 		return operations.NewGetPipelineOK().WithPayload(&models.PipelineWithBuilds{
 			Pipeline: &models.Pipeline{
-				BuildScript:     pipeline.GetBuildScript(),
-				ForceCleanBuild: pipeline.ForceCleanBuild(),
+				BuildScript:     pipeline.GetPipelineConfig().BuildScript,
+				ForceCleanBuild: pipeline.GetPipelineConfig().ForceCleanBuild,
 				LastBuildResult: nil,
-				Name:            pipeline.GetName(),
-				Path:            pipeline.GetPath(),
+				Name:            pipeline.GetPipelineConfig().Name,
+				Path:            pipeline.GetPipelineConfig().Path,
 				Triggers:        triggers,
-				URL:             pipeline.GetURL(),
+				URL:             pipeline.GetPipelineConfig().URL,
 			},
 			Builds: buildResults,
 		})

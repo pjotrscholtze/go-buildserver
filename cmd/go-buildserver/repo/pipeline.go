@@ -33,17 +33,16 @@ func NewPipeline(pl config.Pipeline, buildRepo *pipelineRepo, buildResultRepo Bu
 
 type Pipeline interface {
 	Build(job *models.Job)
-	GetBuildScript() string
-	ForceCleanBuild() bool
-	GetName() string
-	GetPath() string
-	GetURL() string
+	GetPipelineConfig() config.Pipeline
 	GetTriggers() []config.Trigger
 	GetTriggersOfKind(filterKind string) []config.Trigger
 	GetLastNBuildResults(n int) []entity.BuildResult
 	GetBuildResultForJobID(job *models.Job) *entity.BuildResult
 }
 
+func (p *pipeline) GetPipelineConfig() config.Pipeline {
+	return p.pipeline
+}
 func (p *pipeline) GetBuildResultForJobID(job *models.Job) *entity.BuildResult {
 	br, err := p.buildResultRepo.GetBuildResultForJobID(job.ID)
 	if err != nil {
@@ -69,24 +68,8 @@ func (p *pipeline) GetLastNBuildResults(n int) []entity.BuildResult {
 	return res
 }
 
-func (p *pipeline) GetBuildScript() string {
-	return p.pipeline.BuildScript
-}
-
-func (p *pipeline) ForceCleanBuild() bool {
-	return p.pipeline.ForceCleanBuild
-}
-
 func (p *pipeline) GetName() string {
 	return p.pipeline.Name
-}
-
-func (p *pipeline) GetPath() string {
-	return p.pipeline.Path
-}
-
-func (p *pipeline) GetURL() string {
-	return p.pipeline.URL
 }
 func (p *pipeline) GetTriggers() []config.Trigger {
 	return p.pipeline.Triggers
@@ -104,7 +87,7 @@ func (p *pipeline) GetTriggersOfKind(filterKind string) []config.Trigger {
 }
 
 func (p *pipeline) printBuildStart(reason, origin, queueTime string) {
-	isRepoBased := len(p.GetURL()) > 0
+	isRepoBased := len(p.GetPipelineConfig().URL) > 0
 	log.Printf("Starting build for '%s', reason: %s, origin: %s, queuetime: %s", p.pipeline.Name, reason, origin, queueTime)
 	log.Println("Build configuration:")
 	log.Printf("- Is repo based:%s\n", strconv.FormatBool(isRepoBased))
@@ -126,10 +109,10 @@ func (p *pipeline) Build(job *models.Job) {
 	p.printBuildStart(reason, origin, queueTime)
 	os.MkdirAll(p.buildRepo.config.WorkspaceDirectory, 0777)
 
-	isRepoBased := len(p.GetURL()) > 0
+	isRepoBased := len(p.GetPipelineConfig().URL) > 0
 	repoPath := path.Join(p.buildRepo.config.WorkspaceDirectory, p.pipeline.Name)
 	doClone := !fileExists(repoPath)
-	if isRepoBased && p.ForceCleanBuild() && !doClone {
+	if isRepoBased && p.GetPipelineConfig().ForceCleanBuild && !doClone {
 		doClone = true
 		os.RemoveAll(repoPath)
 	}
@@ -159,7 +142,7 @@ func (p *pipeline) Build(job *models.Job) {
 	bootScript := []string{"#!/bin/sh"}
 	jobPath := gitPath
 	if !isRepoBased {
-		jobPath = p.GetPath()
+		jobPath = p.GetPipelineConfig().Path
 	}
 	if isRepoBased {
 		bootScript = append(bootScript, []string{
