@@ -31,23 +31,15 @@ func (bq *jobQueue) GetJobById(buildId int64) *models.Job {
 }
 
 func (bq *jobQueue) ListAllJobsOfPipeline(pipelineName string) []*models.Job {
-	bq.lock.Lock()
-	defer bq.lock.Unlock()
-	return bq.listAllJobsOfPipelineUnsafe(pipelineName)
-}
-func (bq *jobQueue) listAllJobsOfPipelineUnsafe(pipelineName string) []*models.Job {
 	jobs, _ := bq.dbRepo.ListAllJobsOfPipeline(pipelineName)
 	out := []*models.Job{}
 	for i := range jobs {
 		out = append(out, &jobs[i])
 	}
-
 	return out
 }
 func (bq *jobQueue) List() []*models.Job {
 	out := []*models.Job{}
-	bq.lock.Lock()
-	defer bq.lock.Unlock()
 	jobs, _ := bq.dbRepo.ListJobByStatus("pending")
 	for i := range jobs {
 		out = append(out, &jobs[i])
@@ -57,8 +49,6 @@ func (bq *jobQueue) List() []*models.Job {
 }
 
 func (bq *jobQueue) tick() *models.Job {
-	bq.lock.Lock()
-	defer bq.lock.Unlock()
 	jobs, _ := bq.dbRepo.ListJobByStatus("pending")
 	if len(jobs) == 0 {
 		return nil
@@ -91,8 +81,6 @@ func (bq *jobQueue) Run() {
 	}
 }
 func (bq *jobQueue) AddQueueItem(repoName, buildReason, origin string) {
-	bq.lock.Lock()
-	defer bq.lock.Unlock()
 	bq.dbRepo.AddJob(models.Job{
 		RepoName:    repoName,
 		BuildReason: buildReason,
@@ -106,7 +94,7 @@ func (bq *jobQueue) AddQueueItem(repoName, buildReason, origin string) {
 	bq.wm.BroadcastOnEndpoint("repo-builds", repoName, struct {
 		Jobs []*models.Job
 	}{
-		Jobs: bq.listAllJobsOfPipelineUnsafe(repoName),
+		Jobs: bq.ListAllJobsOfPipeline(repoName),
 	})
 }
 

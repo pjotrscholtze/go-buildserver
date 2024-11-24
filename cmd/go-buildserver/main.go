@@ -158,7 +158,7 @@ func main() {
 	// job, err = dbRepo.GetJobByID(1)
 	// _ = job
 	buildResultRepo := repo.NewBuildResultRepo(dbRepo, &wm)
-	buildRepo := repo.NewPipelineRepo(&c, &wm, buildResultRepo)
+	buildRepo := repo.NewPipelineRepo(&c, &wm, buildResultRepo, dbRepo)
 	bq := repo.NewJobQueue(buildRepo, cr, &wm, dbRepo)
 	go bq.Run()
 

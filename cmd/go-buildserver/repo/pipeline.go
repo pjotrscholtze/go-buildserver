@@ -7,7 +7,6 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/config"
@@ -18,18 +17,17 @@ import (
 
 type pipeline struct {
 	pipeline        config.Pipeline
-	resultsMutex    sync.Mutex
 	buildRepo       *pipelineRepo
 	buildResultRepo BuildResultRepo
 	db              DatabaseRepo
 }
 
-func NewPipeline(pl config.Pipeline, buildRepo *pipelineRepo, buildResultRepo BuildResultRepo) Pipeline {
+func NewPipeline(pl config.Pipeline, buildRepo *pipelineRepo, buildResultRepo BuildResultRepo, db DatabaseRepo) Pipeline {
 	return &pipeline{
-		resultsMutex:    sync.Mutex{},
 		pipeline:        pl,
 		buildRepo:       buildRepo,
 		buildResultRepo: buildResultRepo,
+		db:              db,
 	}
 }
 
@@ -126,7 +124,6 @@ func (p *pipeline) Build(job *models.Job) {
 	}
 	reason, origin, queueTime := job.BuildReason, job.Origin, job.QueueTime.String()
 	p.printBuildStart(reason, origin, queueTime)
-	p.resultsMutex.Lock()
 	os.MkdirAll(p.buildRepo.config.WorkspaceDirectory, 0777)
 
 	isRepoBased := len(p.GetURL()) > 0
@@ -138,7 +135,6 @@ func (p *pipeline) Build(job *models.Job) {
 	}
 	os.MkdirAll(repoPath, 0777)
 
-	p.resultsMutex.Unlock()
 	gitPath := path.Join(repoPath, p.pipeline.Name)
 
 	f, err := os.Create(path.Join(repoPath, "boot.sh"))
@@ -204,9 +200,7 @@ func (p *pipeline) Build(job *models.Job) {
 		"/bin/sh",
 		[]string{path.Join(repoPath, "boot.sh")},
 		func(pt process.PipeType, t time.Time, s string) {
-			p.resultsMutex.Lock()
 			p.buildResultRepo.AddLine(job.ID, entity.NewBuildResultLine(s, pt, t))
-			p.resultsMutex.Unlock()
 		})
 	p.buildResultRepo.SetStatus(job.ID, entity.FINISHED)
 }

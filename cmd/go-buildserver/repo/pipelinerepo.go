@@ -59,7 +59,7 @@ func (br *pipelineRepo) List() []Pipeline {
 	return br.pipelines
 }
 
-func NewPipelineRepo(config *config.Config, wm *websocketmanager.WebsocketManager, buildResultRepo BuildResultRepo) PipelineRepo {
+func NewPipelineRepo(config *config.Config, wm *websocketmanager.WebsocketManager, buildResultRepo BuildResultRepo, db DatabaseRepo) PipelineRepo {
 	br := &pipelineRepo{
 		config:           config,
 		websocketmanager: wm,
@@ -67,7 +67,7 @@ func NewPipelineRepo(config *config.Config, wm *websocketmanager.WebsocketManage
 	}
 	res := make([]Pipeline, len(br.config.Pipelines))
 	for i, elem := range br.config.Pipelines {
-		res[i] = NewPipeline(elem, br, br.buildResultRepo)
+		res[i] = NewPipeline(elem, br, br.buildResultRepo, db)
 	}
 	br.pipelines = res
 	return br
