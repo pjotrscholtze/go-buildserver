@@ -17,8 +17,7 @@ import (
 )
 
 type pipeline struct {
-	pipeline config.Pipeline
-	// results         []*entity.BuildResult
+	pipeline        config.Pipeline
 	resultsMutex    sync.Mutex
 	buildRepo       *pipelineRepo
 	buildResultRepo BuildResultRepo
@@ -27,7 +26,6 @@ type pipeline struct {
 
 func NewPipeline(pl config.Pipeline, buildRepo *pipelineRepo, buildResultRepo BuildResultRepo) Pipeline {
 	return &pipeline{
-		// results:         []*entity.BuildResult{},
 		resultsMutex:    sync.Mutex{},
 		pipeline:        pl,
 		buildRepo:       buildRepo,
@@ -211,5 +209,4 @@ func (p *pipeline) Build(job *models.Job) {
 			p.resultsMutex.Unlock()
 		})
 	p.buildResultRepo.SetStatus(job.ID, entity.FINISHED)
-	// results.Websocketmanager.BroadcastOnEndpoint("build", strconv.FormatInt(results.Job.ID, 10), results)
 }
