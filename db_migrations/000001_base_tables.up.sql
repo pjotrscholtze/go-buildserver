@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS Job(
+CREATE TABLE IF NOT EXISTS job(
 	id           INTEGER      PRIMARY KEY AUTOINCREMENT NOT NULL,
 	buildreason  VARCHAR(256)                           NULL,
 	origin       VARCHAR(64)                            NULL,
@@ -8,10 +8,10 @@ CREATE TABLE IF NOT EXISTS Job(
 	starttime    DATETIME                               NULL
 );
 
-CREATE TABLE IF NOT EXISTS BuildResultLine(
-	JobID INT(11)     NOT NULL,
-	Line  TEXT        NOT NULL,
-	Pipe  VARCHAR(16) NOT NULL,
-	Time  DATETIME    NOT NULL,
+CREATE TABLE IF NOT EXISTS buildresultline(
+	jobid INT(11)     NOT NULL,
+	line  TEXT        NOT NULL,
+	pipe  VARCHAR(16) NOT NULL,
+	time  DATETIME    NOT NULL,
     PRIMARY KEY (JobID, Time)
 );

@@ -9,19 +9,11 @@ import (
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/websocketmanager"
 )
 
-type ResultStatus string
-
-const (
-	PENDING  ResultStatus = "PENDING"
-	RUNNING               = "RUNNING"
-	FINISHED              = "FINISHED"
-	ERROR                 = "ERROR"
-)
-
 type pipelineRepo struct {
 	pipelines        []Pipeline
 	config           *config.Config
 	websocketmanager *websocketmanager.WebsocketManager
+	buildResultRepo  BuildResultRepo
 }
 type PipelineRepo interface {
 	GetRepoByName(name string) Pipeline
@@ -52,7 +44,7 @@ func (br *pipelineRepo) GetRepoByName(name string) Pipeline {
 		}
 	}
 	log.Fatalln("Repo not found!") // @todo decent error handling here!
-	return &pipeline{pipeline: br.config.Pipelines[0]}
+	return nil
 }
 func (br *pipelineRepo) GetRepoBySlug(name string) Pipeline {
 	for _, repo := range br.pipelines {
@@ -61,21 +53,21 @@ func (br *pipelineRepo) GetRepoBySlug(name string) Pipeline {
 		}
 	}
 	log.Fatalln("Repo not found!") // @todo decent error handling here!
-	return &pipeline{pipeline: br.config.Pipelines[0]}
+	return nil
 }
 func (br *pipelineRepo) List() []Pipeline {
 	return br.pipelines
 }
 
-func NewPipelineRepo(config *config.Config, wm *websocketmanager.WebsocketManager) PipelineRepo {
+func NewPipelineRepo(config *config.Config, wm *websocketmanager.WebsocketManager, buildResultRepo BuildResultRepo) PipelineRepo {
 	br := &pipelineRepo{
 		config:           config,
 		websocketmanager: wm,
+		buildResultRepo:  buildResultRepo,
 	}
 	res := make([]Pipeline, len(br.config.Pipelines))
 	for i, elem := range br.config.Pipelines {
-		r := pipeline{pipeline: elem, buildRepo: br}
-		res[i] = &r
+		res[i] = NewPipeline(elem, br, br.buildResultRepo)
 	}
 	br.pipelines = res
 	return br

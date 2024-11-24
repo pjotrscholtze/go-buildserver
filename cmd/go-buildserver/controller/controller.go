@@ -3,6 +3,7 @@ package controller
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/entity"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/repo"
 	"github.com/pjotrscholtze/go-buildserver/models"
 	"github.com/pjotrscholtze/go-buildserver/restapi/operations"
@@ -14,7 +15,7 @@ func ConnectControllers(api *operations.GoBuildserverAPI, pipelineRepo repo.Pipe
 		pipelineRepos := pipelineRepo.List()
 		payload := make([]*models.Pipeline, len(pipelineRepos))
 		for i, pipelineRepo := range pipelineRepos {
-			var lbr repo.BuildResult
+			var lbr entity.BuildResult
 			outputLbr := make([]*models.BuildResult, 0)
 
 			lbrs := pipelineRepo.GetLastNBuildResults(1)

@@ -92,6 +92,11 @@ func main() {
 		return
 	}
 	db, err := sqlx.Open(c.SQLDriver, c.SQLConnectionString)
+	db.SetConnMaxIdleTime(-1)
+	db.SetConnMaxLifetime(-1)
+	// db.SetMaxIdleConns(-1)
+	db.SetMaxOpenConns(1)
+
 	if err != nil {
 		log.Println("Failed to create SQL connection!")
 		log.Panic(err)
@@ -152,7 +157,8 @@ func main() {
 
 	// job, err = dbRepo.GetJobByID(1)
 	// _ = job
-	buildRepo := repo.NewPipelineRepo(&c, &wm)
+	buildResultRepo := repo.NewBuildResultRepo(dbRepo, &wm)
+	buildRepo := repo.NewPipelineRepo(&c, &wm, buildResultRepo)
 	bq := repo.NewJobQueue(buildRepo, cr, &wm, dbRepo)
 	go bq.Run()
 

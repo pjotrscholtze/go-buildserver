@@ -14,6 +14,7 @@ import (
 	"github.com/pjotrscholtze/go-bootstrap/cmd/go-bootstrap/bootstrap"
 	"github.com/pjotrscholtze/go-bootstrap/cmd/go-bootstrap/builder"
 	"github.com/pjotrscholtze/go-bootstrap/cmd/go-bootstrap/htmlwrapper"
+	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/entity"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/repo"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/view"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/websocketmanager"
@@ -117,7 +118,7 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 		lastBuildStatus := ""
 		lastBuildReason := ""
 		lastBuildStarttime := ""
-		lines := []repo.BuildResultLine{{
+		lines := []entity.BuildResultLine{{
 			Line: "",
 			Pipe: "",
 			Time: strfmt.UnixZero,
@@ -129,13 +130,13 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 			lastBuildStarttime = lastBuild.Starttime.Format(time.DateTime)
 			lines = lastBuild.Lines
 		}
-		tb := builder.NewTableBuilder[repo.BuildResultLine](lines)
+		tb := builder.NewTableBuilder[entity.BuildResultLine](lines)
 		tb.GetTypeMapperConv().RegisterCustomFieldMapping("pipe", func(fieldName string, refStruct interface{}) htmlwrapper.Elm {
-			line := refStruct.(repo.BuildResultLine)
+			line := refStruct.(entity.BuildResultLine)
 			return htmlwrapper.Text(line.Pipe)
 		})
 		tb.GetTypeMapperConv().RegisterCustomFieldMapping("time", func(fieldName string, refStruct interface{}) htmlwrapper.Elm {
-			line := refStruct.(repo.BuildResultLine)
+			line := refStruct.(entity.BuildResultLine)
 			return htmlwrapper.Text(strfmt.DateTime(line.Time).String())
 		})
 
@@ -247,9 +248,9 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 		jobBuilder := buildRepo.GetRepoByName(job.RepoName)
 		buildResult := jobBuilder.GetBuildResultForJobID(job)
 		if buildResult == nil {
-			buildResult = &repo.BuildResult{
+			buildResult = &entity.BuildResult{
 				PipelineName: job.RepoName,
-				Lines: []repo.BuildResultLine{
+				Lines: []entity.BuildResultLine{
 					{
 						Line: "",
 						Pipe: "",
@@ -258,7 +259,7 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 				},
 				Reason:           job.BuildReason,
 				Starttime:        time.Time(job.QueueTime),
-				Status:           repo.ResultStatus(job.Status),
+				Status:           entity.ResultStatus(job.Status),
 				Websocketmanager: nil,
 				Job:              job,
 			}
@@ -354,13 +355,13 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 			},
 		}
 
-		tb := builder.NewTableBuilder[repo.BuildResultLine](buildResult.Lines)
+		tb := builder.NewTableBuilder[entity.BuildResultLine](buildResult.Lines)
 		tb.GetTypeMapperConv().RegisterCustomFieldMapping("pipe", func(fieldName string, refStruct interface{}) htmlwrapper.Elm {
-			line := refStruct.(repo.BuildResultLine)
+			line := refStruct.(entity.BuildResultLine)
 			return htmlwrapper.Text(line.Pipe)
 		})
 		tb.GetTypeMapperConv().RegisterCustomFieldMapping("time", func(fieldName string, refStruct interface{}) htmlwrapper.Elm {
-			line := refStruct.(repo.BuildResultLine)
+			line := refStruct.(entity.BuildResultLine)
 			return htmlwrapper.Text(strfmt.DateTime(line.Time).String())
 		})
 

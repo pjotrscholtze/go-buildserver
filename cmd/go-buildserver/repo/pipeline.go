@@ -11,15 +11,28 @@ import (
 	"time"
 
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/config"
+	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/entity"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/process"
 	"github.com/pjotrscholtze/go-buildserver/models"
 )
 
 type pipeline struct {
-	pipeline     config.Pipeline
-	results      []*BuildResult
-	resultsMutex sync.Mutex
-	buildRepo    *pipelineRepo
+	pipeline config.Pipeline
+	// results         []*entity.BuildResult
+	resultsMutex    sync.Mutex
+	buildRepo       *pipelineRepo
+	buildResultRepo BuildResultRepo
+	db              DatabaseRepo
+}
+
+func NewPipeline(pl config.Pipeline, buildRepo *pipelineRepo, buildResultRepo BuildResultRepo) Pipeline {
+	return &pipeline{
+		// results:         []*entity.BuildResult{},
+		resultsMutex:    sync.Mutex{},
+		pipeline:        pl,
+		buildRepo:       buildRepo,
+		buildResultRepo: buildResultRepo,
+	}
 }
 
 type Pipeline interface {
@@ -31,30 +44,30 @@ type Pipeline interface {
 	GetURL() string
 	GetTriggers() []config.Trigger
 	GetTriggersOfKind(filterKind string) []config.Trigger
-	GetLastNBuildResults(n int) []BuildResult
-	GetBuildResultForJobID(job *models.Job) *BuildResult
+	GetLastNBuildResults(n int) []entity.BuildResult
+	GetBuildResultForJobID(job *models.Job) *entity.BuildResult
 }
 
-func (p *pipeline) GetBuildResultForJobID(job *models.Job) *BuildResult {
-	for _, pline := range p.results {
-		if pline.Job == job {
-			return pline
+func (p *pipeline) GetBuildResultForJobID(job *models.Job) *entity.BuildResult {
+	br, err := p.buildResultRepo.GetBuildResultForJobID(job.ID)
+	if err != nil {
+		return nil
+	}
+	return br
+}
+
+func (p *pipeline) GetLastNBuildResults(n int) []entity.BuildResult {
+	jobs, err := p.db.ListNLastJobsOfPipeline(p.GetName(), n)
+	if err != nil {
+		return nil
+	}
+	res := []entity.BuildResult{}
+	for _, job := range jobs {
+		br, err := p.db.GetBuildResult(job.ID)
+		if err != nil {
+			return nil
 		}
-	}
-	return nil
-}
-
-func (p *pipeline) GetLastNBuildResults(n int) []BuildResult {
-	p.resultsMutex.Lock()
-	defer p.resultsMutex.Unlock()
-
-	if n < 0 {
-		n = len(p.results)
-	}
-	res := make([]BuildResult, min(len(p.results), n))
-	for i := 0; i < len(res); i++ {
-		ind := len(p.results) - n + i
-		res[i] = *p.results[ind]
+		res = append(res, *br)
 	}
 
 	return res
@@ -127,39 +140,23 @@ func (p *pipeline) Build(job *models.Job) {
 	}
 	os.MkdirAll(repoPath, 0777)
 
-	results := &BuildResult{
-		Lines:            []BuildResultLine{},
-		Reason:           reason,
-		Starttime:        time.Now(),
-		Status:           RUNNING,
-		Websocketmanager: p.buildRepo.websocketmanager,
-		Job:              job,
-	}
-	p.results = append(p.results, results)
-	if len(p.results) > int(p.buildRepo.config.MaxHistoryInMemory) {
-		p.results[0].Lines = nil
-		p.results = p.results[1:]
-	}
-
 	p.resultsMutex.Unlock()
 	gitPath := path.Join(repoPath, p.pipeline.Name)
 
 	f, err := os.Create(path.Join(repoPath, "boot.sh"))
 	defer f.Close()
 	if err != nil {
-		results.addLines([]BuildResultLine{
-			{
-				Line: "Failed to create boot script:",
-				pipe: process.STDERR,
-				Pipe: "STDERR",
-				Time: time.Now(),
-			},
-			{
-				Line: err.Error(),
-				pipe: process.STDERR,
-				Pipe: "STDERR",
-				Time: time.Now(),
-			},
+		p.buildResultRepo.AddLines(job.ID, []entity.BuildResultLine{
+			entity.NewBuildResultLine(
+				"Failed to create boot script:",
+				process.STDERR,
+				time.Now(),
+			),
+			entity.NewBuildResultLine(
+				err.Error(),
+				process.STDERR,
+				time.Now(),
+			),
 		})
 		fmt.Println(err)
 		return
@@ -189,19 +186,17 @@ func (p *pipeline) Build(job *models.Job) {
 
 	_, err = f.WriteString(strings.Join(bootScript, "\n"))
 	if err != nil {
-		results.addLines([]BuildResultLine{
-			{
-				Line: "Failed to write boot script:",
-				pipe: process.STDERR,
-				Pipe: "STDERR",
-				Time: time.Now(),
-			},
-			{
-				Line: err.Error(),
-				pipe: process.STDERR,
-				Pipe: "STDERR",
-				Time: time.Now(),
-			},
+		p.buildResultRepo.AddLines(job.ID, []entity.BuildResultLine{
+			entity.NewBuildResultLine(
+				"Failed to write boot script:",
+				process.STDERR,
+				time.Now(),
+			),
+			entity.NewBuildResultLine(
+				err.Error(),
+				process.STDERR,
+				time.Now(),
+			),
 		})
 		fmt.Println(err)
 		return
@@ -212,17 +207,9 @@ func (p *pipeline) Build(job *models.Job) {
 		[]string{path.Join(repoPath, "boot.sh")},
 		func(pt process.PipeType, t time.Time, s string) {
 			p.resultsMutex.Lock()
-			results.addLine(BuildResultLine{
-				Line: s,
-				pipe: pt,
-				Pipe: map[process.PipeType]string{
-					process.STDOUT: "STDOUT",
-					process.STDERR: "STDERR",
-				}[pt],
-				Time: t,
-			})
+			p.buildResultRepo.AddLine(job.ID, entity.NewBuildResultLine(s, pt, t))
 			p.resultsMutex.Unlock()
 		})
-	results.Status = FINISHED
-	results.Websocketmanager.BroadcastOnEndpoint("build", strconv.FormatInt(results.Job.ID, 10), results)
+	p.buildResultRepo.SetStatus(job.ID, entity.FINISHED)
+	// results.Websocketmanager.BroadcastOnEndpoint("build", strconv.FormatInt(results.Job.ID, 10), results)
 }
