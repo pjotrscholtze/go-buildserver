@@ -5,7 +5,8 @@ WORKDIR /app
 ADD go.mod .
 RUN go mod download
 ADD . /app
-RUN CGO_ENABLED=0 GOOS=linux go build -a -o go-buildserver ./cmd/go-buildserver/main.go
+# RUN CGO_ENABLED=0 GOOS=linux go build -a -o go-buildserver ./cmd/go-buildserver/main.go
+RUN GOOS=linux go build -a -o go-buildserver ./cmd/go-buildserver/main.go
 
 # Run
 FROM alpine:latest
