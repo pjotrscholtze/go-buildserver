@@ -1,5 +1,5 @@
 # Build
-FROM golang:1.20-alpine as builder
+FROM golang:1.22-alpine as builder
 RUN mkdir /app
 WORKDIR /app
 ADD go.mod .
@@ -11,7 +11,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -o go-buildserver ./cmd/go-buildserver/
 FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/go-buildserver .
-COPY ./cmd/go-buildserver/templates ./templates
+COPY ./db_migrations ./db_migrations
 COPY ./example ./example
 COPY ./entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
