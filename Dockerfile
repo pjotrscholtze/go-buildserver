@@ -5,7 +5,7 @@ WORKDIR /app
 ADD go.mod .
 RUN go mod download
 ADD . /app
-RUN apl add --update --no-cache g++ make
+RUN apk add --update --no-cache g++ make
 # RUN CGO_ENABLED=0 GOOS=linux go build -a -o go-buildserver ./cmd/go-buildserver/main.go
 RUN CGO_ENABLED=1 GOOS=linux go build -a -o go-buildserver ./cmd/go-buildserver/main.go
 
