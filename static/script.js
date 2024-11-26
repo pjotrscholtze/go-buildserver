@@ -85,6 +85,18 @@ if (window.location.pathname === "/") {
     });
 } else if (window.location.pathname.startsWith("/repo/") && !window.location.pathname.substr(6).includes("/")) {
     const repoName = document.querySelector(".properties").getAttribute("data-repo");
+
+    document.querySelector("#start-build").setAttribute("href", "#");
+    document.querySelector("#start-build").onclick = (ev)=>{
+        fetch("/api/pipeline/" + repoName + "?reason=web", {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+        });
+    };
+
     createWsConnection("ws://localhost:3000/ws/repo-builds/"+repoName, function(evt) {
         const repoData = JSON.parse(evt.data);
         console.log(repoData);

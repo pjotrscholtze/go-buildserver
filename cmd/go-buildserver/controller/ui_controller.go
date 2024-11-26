@@ -502,6 +502,18 @@ func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue,
 					}},
 			},
 		})
+		repoProperties = append(repoProperties, &htmlwrapper.HTMLElm{
+			Tag: "li",
+			Contents: []htmlwrapper.Elm{
+				&htmlwrapper.HTMLElm{Tag: "a",
+					Attrs: map[string]string{
+						"id": "start-build",
+					},
+					Contents: []htmlwrapper.Elm{
+						htmlwrapper.Text("Start build"),
+					}},
+			},
+		})
 
 		meta := htmlwrapper.HTMLElm{
 			Tag: "ul",

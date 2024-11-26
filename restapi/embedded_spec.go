@@ -95,7 +95,6 @@ func init() {
           {
             "name": "data",
             "in": "body",
-            "required": true,
             "schema": {
               "type": "object",
               "additionalProperties": true
@@ -350,7 +349,6 @@ func init() {
           {
             "name": "data",
             "in": "body",
-            "required": true,
             "schema": {
               "type": "object",
               "additionalProperties": true

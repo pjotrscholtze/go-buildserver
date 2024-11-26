@@ -6,7 +6,6 @@ package operations
 // Editing this file might prove futile when you re-run the swagger generate command
 
 import (
-	"io"
 	"net/http"
 
 	"github.com/go-openapi/errors"
@@ -34,7 +33,6 @@ type StartPipelineParams struct {
 	HTTPRequest *http.Request `json:"-"`
 
 	/*
-	  Required: true
 	  In: body
 	*/
 	Data interface{}
@@ -65,17 +63,11 @@ func (o *StartPipelineParams) BindRequest(r *http.Request, route *middleware.Mat
 		defer r.Body.Close()
 		var body interface{}
 		if err := route.Consumer.Consume(r.Body, &body); err != nil {
-			if err == io.EOF {
-				res = append(res, errors.Required("data", "body", ""))
-			} else {
-				res = append(res, errors.NewParseError("data", "body", "", err))
-			}
+			res = append(res, errors.NewParseError("data", "body", "", err))
 		} else {
 			// no validation on generic interface
 			o.Data = body
 		}
-	} else {
-		res = append(res, errors.Required("data", "body", ""))
 	}
 
 	rName, rhkName, _ := route.Params.GetOK("name")

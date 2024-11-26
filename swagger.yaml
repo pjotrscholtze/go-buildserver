@@ -71,7 +71,7 @@ paths:
           schema:
             type: object
             additionalProperties: true
-          required: true
+          required: false
         - name: reason
           in: query
           type: string
