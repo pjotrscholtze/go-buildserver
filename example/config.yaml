@@ -5,6 +5,7 @@ WorkspaceDirectory: /tmp/go-buildserver
 SQLDriver: sqlite3
 SQLConnectionString: ":memory:"
 DBMigrations: ../../db_migrations
+PathToStaticContent: ../../static
 Pipelines:
 - Path: ../../
   Name: Path_based_example

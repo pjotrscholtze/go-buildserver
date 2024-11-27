@@ -31,6 +31,7 @@ type Config struct {
 	SQLDriver           string
 	SQLConnectionString string
 	DBMigrations        string
+	PathToStaticContent string
 }
 
 func LoadConfig(path string) Config {

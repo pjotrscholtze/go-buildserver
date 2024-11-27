@@ -3,7 +3,6 @@ package controller
 import (
 	"bytes"
 	"html/template"
-	"mime"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -15,6 +14,7 @@ import (
 	"github.com/pjotrscholtze/go-bootstrap/cmd/go-bootstrap/bootstrap"
 	"github.com/pjotrscholtze/go-bootstrap/cmd/go-bootstrap/builder"
 	"github.com/pjotrscholtze/go-bootstrap/cmd/go-bootstrap/htmlwrapper"
+	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/config"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/entity"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/repo"
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/view"
@@ -42,12 +42,10 @@ func wrapUITemplate(path string) bytes.Buffer {
 	return renderUITemplate(path, struct{}{})
 }
 
-func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue, wm websocketmanager.WebsocketManager) *mux.Router {
+func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue, wm websocketmanager.WebsocketManager, c config.Config) *mux.Router {
 	router := mux.NewRouter()
 
-	mime.AddExtensionType(".js", "application/javascript")
-
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("../../static"))))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir(c.PathToStaticContent))))
 	router.HandleFunc("/repo/{repoName}/live", func(w http.ResponseWriter, r *http.Request) {
 		// repoName := strings.Split(r.RequestURI[6:], "/")[0]
 		repoName := mux.Vars(r)["repoName"]

@@ -14,6 +14,7 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=builder /app/go-buildserver .
 COPY ./db_migrations ./db_migrations
+COPY ./static ./static
 COPY ./example ./example
 COPY ./entrypoint.sh ./entrypoint.sh
 RUN chmod +x ./entrypoint.sh
