@@ -3,6 +3,7 @@ package controller
 import (
 	"bytes"
 	"html/template"
+	"mime"
 	"net/http"
 	"reflect"
 	"strconv"
@@ -43,6 +44,8 @@ func wrapUITemplate(path string) bytes.Buffer {
 
 func RegisterUIController(buildRepo repo.PipelineRepo, buildQueue repo.JobQueue, wm websocketmanager.WebsocketManager) *mux.Router {
 	router := mux.NewRouter()
+
+	mime.AddExtensionType(".js", "application/javascript")
 
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir("../../static"))))
 	router.HandleFunc("/repo/{repoName}/live", func(w http.ResponseWriter, r *http.Request) {
