@@ -65,14 +65,14 @@ function createWsConnection(endpoint, onMessage) {
     setupWebsocket();
 }
 if (window.location.pathname === "/") {
-    createWsConnection("ws://localhost:3000/ws/jobs", function(evt) {
+    createWsConnection("ws://"+window.location.host+"/ws/jobs", function(evt) {
         const jobs = JSON.parse(evt.data);
         console.log(jobs);
         ensureTableContent(document.querySelector("table"), jobs);
     });
 } else if (window.location.pathname.startsWith("/repo/") && window.location.pathname.endsWith("/live")) {
     const repoName = document.querySelector(".properties").getAttribute("data-repo");
-    createWsConnection("ws://localhost:3000/ws/repo-build-live/"+repoName, function(evt) {
+    createWsConnection("ws://"+window.location.host+"/ws/repo-build-live/"+repoName, function(evt) {
         const repoData = JSON.parse(evt.data);
 
         document.querySelector("#build-status span").innerText = repoData.Status;
@@ -97,7 +97,7 @@ if (window.location.pathname === "/") {
         });
     };
 
-    createWsConnection("ws://localhost:3000/ws/repo-builds/"+repoName, function(evt) {
+    createWsConnection("ws://"+window.location.host+"/ws/repo-builds/"+repoName, function(evt) {
         const repoData = JSON.parse(evt.data);
         console.log(repoData);
         const queryString = window.location.search;
@@ -129,7 +129,7 @@ if (window.location.pathname === "/") {
 } else if (window.location.pathname.startsWith("/build/build-")) {
     const buildNumber = 1 * document.querySelector("#build-id").getAttribute("data-build-id");
     const repoName = document.querySelector(".properties").getAttribute("data-repo");
-    createWsConnection("ws://localhost:3000/ws/build/"+buildNumber, function(evt) {
+    createWsConnection("ws://"+window.location.host+"/ws/build/"+buildNumber, function(evt) {
         const repoData = JSON.parse(evt.data);
         document.querySelector("#build-status span").innerText = repoData.Status;
         document.querySelector("#build-reason span").innerText = repoData.Reason;
