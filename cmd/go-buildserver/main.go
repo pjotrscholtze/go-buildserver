@@ -69,12 +69,12 @@ func getDatabaseDriver(db *sql.DB, driverName string) (database.Driver, error) {
 }
 
 func main() {
-	// if len(os.Args) != 2 {
-	// 	println("Usage: app <config-path.yaml>")
-	// 	return
-	// }
-	// path := os.Args[1]
-	path := "../../example/config.yaml"
+	if len(os.Args) != 2 {
+		println("Usage: app <config-path.yaml>")
+		return
+	}
+	path := os.Args[1]
+	// path := "../../example/config.yaml"
 	log.Println("Starting buildserver")
 
 	log.Printf("Loading config: %s\n", path)
