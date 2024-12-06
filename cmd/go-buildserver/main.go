@@ -92,10 +92,13 @@ func main() {
 		return
 	}
 	db, err := sqlx.Open(c.SQLDriver, c.SQLConnectionString)
-	db.SetConnMaxIdleTime(-1)
-	db.SetConnMaxLifetime(-1)
-	// db.SetMaxIdleConns(-1)
-	db.SetMaxOpenConns(1)
+
+	if c.SQLDriver == "sqlite3" {
+		db.SetConnMaxIdleTime(-1)
+		db.SetConnMaxLifetime(-1)
+		// db.SetMaxIdleConns(-1)
+		db.SetMaxOpenConns(1)
+	}
 
 	if err != nil {
 		log.Println("Failed to create SQL connection!")
