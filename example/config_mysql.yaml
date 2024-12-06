@@ -1,0 +1,25 @@
+MaxHistoryInMemory: 999999999999
+HTTPPort: 3000
+HTTPHost: "0.0.0.0"
+WorkspaceDirectory: /tmp/go-buildserver
+SQLDriver: mysql
+SQLConnectionString: "root:buildserver@tcp(127.0.0.1:3306)/buildserver"
+DBMigrations: ../../db_migrations_mysql
+PathToStaticContent: ../../static
+Pipelines:
+- Path: ../../
+  Name: Path_based_example
+  BuildScript: ./build2.sh
+  Triggers:
+  - Kind: Cron
+    Schedule: "*/10 * * * * *"
+  - Kind: WebHook
+- URL: https://github.com/pjotrscholtze/go-buildserver.git
+  Name: Go-Buildserver_Repo_clone_example
+  BuildScript: ./build.sh
+  SSHKeyLocation: /data/.ssh/github.com
+  ForceCleanBuild: True
+  Triggers:
+  - Kind: Cron
+    Schedule: "*/15 * * * * *"
+  - Kind: WebHook

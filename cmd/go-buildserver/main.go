@@ -67,6 +67,24 @@ func getDatabaseDriver(db *sql.DB, driverName string) (database.Driver, error) {
 		return nil, fmt.Errorf("unsupported driver: %s", driverName)
 	}
 }
+func getDBConnection(c config.Config) (*sqlx.DB, error) {
+	db, err := sqlx.Open(c.SQLDriver, c.SQLConnectionString)
+
+	if err != nil {
+		log.Println("Failed to create SQL connection!")
+		log.Panic(err)
+		return nil, err
+	}
+	db.SetConnMaxIdleTime(-1)
+	db.SetConnMaxLifetime(-1)
+	db.SetMaxOpenConns(1)
+	if err := db.Ping(); err != nil {
+		log.Printf("Failed to ping the database: %v", err)
+		return nil, err
+	}
+
+	return db, nil
+}
 
 func main() {
 	if len(os.Args) != 2 {
@@ -74,6 +92,7 @@ func main() {
 		return
 	}
 	path := os.Args[1]
+	// path := "../../example/config_mysql.yaml"
 	// path := "../../example/config.yaml"
 	log.Println("Starting buildserver")
 
@@ -91,22 +110,8 @@ func main() {
 		log.Println("An unkown SQL Driver was provided, please provide a known driver")
 		return
 	}
-	db, err := sqlx.Open(c.SQLDriver, c.SQLConnectionString)
-
-	if err != nil {
-		log.Println("Failed to create SQL connection!")
-		log.Panic(err)
-		return
-	}
-	db.SetConnMaxIdleTime(-1)
-	db.SetConnMaxLifetime(-1)
-	// db.SetMaxIdleConns(-1)
-	db.SetMaxOpenConns(1)
+	db, err := getDBConnection(c)
 	defer db.Close()
-
-	if err := db.Ping(); err != nil {
-		log.Fatalf("Failed to ping the database: %v", err)
-	}
 
 	driver, err := getDatabaseDriver(db.DB, c.SQLDriver)
 	m, err := migrate.NewWithDatabaseInstance(
@@ -124,43 +129,19 @@ func main() {
 	}
 
 	fmt.Println("Migrations applied successfully!")
+	if !(c.SQLDriver == "sqlite3" && strings.Contains(c.SQLConnectionString, "memory")) {
+		fmt.Println("Reconnecting to the database")
+		db.Close()
+		db, err = getDBConnection(c)
+		defer db.Close()
+		if err != nil {
+			panic(err)
+		}
+	}
 
-	// res, err := db.Query("SELECT tbl_name FROM sqlite_master WHERE type='table';")
-
-	// if err != nil {
-	// 	log.Fatalf("Failed to query: %v", err)
-	// }
-	// for res.Next() {
-	// 	// []string len: 5, cap: 5, ["type","name","tbl_name","rootpage","sql"]
-	// 	cols, _ := res.Columns()
-	// 	_ = cols
-	// 	var tbl_name string
-	// 	res.Scan(&tbl_name)
-	// 	println(tbl_name)
-	// 	_ = tbl_name
-	// }
-	// // res.Close()
-	// _ = res
 	fmt.Println("Starting server")
 
 	dbRepo := repo.NewDatabaseRepo(db)
-	// res2, err := dbRepo.ListJobByStatus("pending")
-	// err = dbRepo.AddJob(models.Job{
-	// 	BuildReason: "test",
-	// 	Origin:      "main",
-	// 	QueueTime:   strfmt.NewDateTime(),
-	// 	RepoName:    "norepo",
-	// 	Status:      "pending",
-	// })
-	// res2, err = dbRepo.ListJobByStatus("pending")
-	// _ = res2
-	// job, err := dbRepo.GetJobByID(2)
-	// err = dbRepo.UpdateJobStatusByID(1, "running")
-	// res2, err = dbRepo.ListJobByStatus("pending")
-	// res2, err = dbRepo.ListAllJobsOfPipeline("norepo")
-
-	// job, err = dbRepo.GetJobByID(1)
-	// _ = job
 	buildResultRepo := repo.NewBuildResultRepo(dbRepo, &wm)
 	buildRepo := repo.NewPipelineRepo(&c, &wm, buildResultRepo, dbRepo)
 	bq := repo.NewJobQueue(buildRepo, cr, &wm, dbRepo)

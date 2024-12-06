@@ -1,6 +1,7 @@
 package repo
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/go-openapi/strfmt"
@@ -8,6 +9,26 @@ import (
 	"github.com/pjotrscholtze/go-buildserver/cmd/go-buildserver/entity"
 	"github.com/pjotrscholtze/go-buildserver/models"
 )
+
+func interfaceToString(val interface{}) string {
+	if fmt.Sprintf("%T", val) == "string" {
+		return val.(string)
+	}
+
+	return string(val.([]uint8))
+}
+func interfaceToDatetime(val interface{}) strfmt.DateTime {
+	var queueTime strfmt.DateTime
+	if fmt.Sprintf("%T", val) == "[]uint8" {
+		qtString := string(val.([]uint8))
+		qt, _ := time.Parse("2006-01-02 15:04:05", qtString)
+		queueTime = strfmt.DateTime(qt)
+	} else {
+		queueTime = strfmt.DateTime(val.(time.Time))
+	}
+
+	return queueTime
+}
 
 type internalJob struct {
 	ID           interface{}
@@ -17,6 +38,17 @@ type internalJob struct {
 	Pipelinename interface{}
 	Status       interface{}
 	Starttime    interface{}
+}
+
+func (ij *internalJob) AsModelJob() *models.Job {
+	return &models.Job{
+		BuildReason: interfaceToString(ij.Buildreason),
+		ID:          ij.ID.(int64),
+		QueueTime:   interfaceToDatetime(ij.Queuetime),
+		Origin:      interfaceToString(ij.Origin),
+		RepoName:    interfaceToString(ij.Pipelinename),
+		Status:      interfaceToString(ij.Status),
+	}
 }
 
 type databaseRepo struct {
@@ -32,11 +64,12 @@ func (dr *databaseRepo) AddJob(job models.Job) error {
 		return err
 	}
 	defer st.Close()
+	qt := time.Time(job.QueueTime).Format("2006-01-02 15:04:05")
 
 	_, err = st.Exec(map[string]interface{}{
 		"BuildReason": job.BuildReason,
 		"Origin":      job.Origin,
-		"QueueTime":   job.QueueTime,
+		"QueueTime":   qt,
 		"RepoName":    job.RepoName,
 		"Status":      job.Status,
 	})
@@ -61,14 +94,7 @@ func (dr *databaseRepo) ListNLastJobsOfPipeline(pipelineName string, n int) ([]m
 
 	if err == nil {
 		for _, row := range jobs {
-			out = append(out, models.Job{
-				BuildReason: row.Buildreason.(string),
-				ID:          row.ID.(int64),
-				Origin:      row.Origin.(string),
-				QueueTime:   strfmt.DateTime(row.Queuetime.(time.Time)),
-				RepoName:    row.Pipelinename.(string),
-				Status:      row.Status.(string),
-			})
+			out = append(out, *row.AsModelJob())
 		}
 	}
 
@@ -91,14 +117,7 @@ func (dr *databaseRepo) ListAllJobsOfPipeline(pipelineName string) ([]models.Job
 
 	if err == nil {
 		for _, row := range jobs {
-			out = append(out, models.Job{
-				BuildReason: row.Buildreason.(string),
-				ID:          row.ID.(int64),
-				Origin:      row.Origin.(string),
-				QueueTime:   strfmt.DateTime(row.Queuetime.(time.Time)),
-				RepoName:    row.Pipelinename.(string),
-				Status:      row.Status.(string),
-			})
+			out = append(out, *row.AsModelJob())
 		}
 	}
 
@@ -122,14 +141,7 @@ func (dr *databaseRepo) ListJobByStatus(status string) ([]models.Job, error) {
 
 	if err == nil {
 		for _, row := range jobs {
-			out = append(out, models.Job{
-				BuildReason: row.Buildreason.(string),
-				ID:          row.ID.(int64),
-				Origin:      row.Origin.(string),
-				QueueTime:   strfmt.DateTime(row.Queuetime.(time.Time)),
-				RepoName:    row.Pipelinename.(string),
-				Status:      row.Status.(string),
-			})
+			out = append(out, *row.AsModelJob())
 		}
 	}
 
@@ -153,14 +165,7 @@ func (dr *databaseRepo) GetJobByID(ID int64) (*models.Job, error) {
 		return nil, err
 	}
 
-	return &models.Job{
-		BuildReason: job.Buildreason.(string),
-		ID:          job.ID.(int64),
-		Origin:      job.Origin.(string),
-		QueueTime:   strfmt.DateTime(job.Queuetime.(time.Time)),
-		RepoName:    job.Pipelinename.(string),
-		Status:      job.Status.(string),
-	}, nil
+	return job.AsModelJob(), nil
 }
 
 func (dr *databaseRepo) UpdateJobStatusByID(ID int64, status string) error {
@@ -221,10 +226,11 @@ func (dr *databaseRepo) GetBuildResult(jobID int64) (*entity.BuildResult, error)
 	for rows.Next() {
 		mres := map[string]interface{}{}
 		err = rows.MapScan(mres)
+		qt := interfaceToDatetime(mres["time"])
 		lines = append(lines, entity.NewBuildResultLinePipeString(
-			mres["line"].(string),
-			mres["pipe"].(string),
-			mres["time"].(time.Time),
+			interfaceToString(mres["line"]),
+			interfaceToString(mres["pipe"]),
+			time.Time(qt),
 		))
 	}
 	var startTime time.Time

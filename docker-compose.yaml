@@ -10,3 +10,19 @@ services:
       - /home/pjotr/.ssh/known_hosts:/root/.ssh/known_hosts:ro
     environment:
       CONFIG_PATH: "/app/example/config.yaml"
+
+  db:
+    image: mariadb
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: buildserver
+    ports:
+      - "3306:3306"
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8085:8080
+    depends_on:
+      - db
