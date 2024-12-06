@@ -93,12 +93,10 @@ func main() {
 	}
 	db, err := sqlx.Open(c.SQLDriver, c.SQLConnectionString)
 
-	if c.SQLDriver == "sqlite3" {
-		db.SetConnMaxIdleTime(-1)
-		db.SetConnMaxLifetime(-1)
-		// db.SetMaxIdleConns(-1)
-		db.SetMaxOpenConns(1)
-	}
+	db.SetConnMaxIdleTime(-1)
+	db.SetConnMaxLifetime(-1)
+	// db.SetMaxIdleConns(-1)
+	db.SetMaxOpenConns(1)
 
 	if err != nil {
 		log.Println("Failed to create SQL connection!")
@@ -127,6 +125,18 @@ func main() {
 	}
 
 	fmt.Println("Migrations applied successfully!")
+
+	if c.SQLDriver != "sqlite3" {
+		db, _ = sqlx.Open(c.SQLDriver, c.SQLConnectionString)
+
+		db.SetConnMaxIdleTime(-1)
+		db.SetConnMaxLifetime(-1)
+		// db.SetMaxIdleConns(-1)
+		db.SetMaxOpenConns(1)
+		if err := db.Ping(); err != nil {
+			log.Fatalf("Failed to ping the database: %v", err)
+		}
+	}
 
 	res, err := db.Query("SELECT tbl_name FROM sqlite_master WHERE type='table';")
 
