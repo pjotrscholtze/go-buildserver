@@ -69,11 +69,11 @@ func getDatabaseDriver(db *sql.DB, driverName string) (database.Driver, error) {
 }
 
 func main() {
-	if len(os.Args) != 3 {
-		println("Usage: app <perform-migrations:0-1> <config-path.yaml>")
+	if len(os.Args) != 2 {
+		println("Usage: app <config-path.yaml>")
 		return
 	}
-	path := os.Args[2]
+	path := os.Args[1]
 	// path := "../../example/config.yaml"
 	log.Println("Starting buildserver")
 
@@ -109,40 +109,38 @@ func main() {
 	}
 
 	driver, err := getDatabaseDriver(db.DB, c.SQLDriver)
-	if os.Args[1] == "1" {
-		m, err := migrate.NewWithDatabaseInstance(
-			"file://"+c.DBMigrations,
-			c.SQLDriver,
-			driver,
-		)
-		if err != nil {
-			log.Fatalf("Failed to initialize migrate: %v", err)
-		}
-
-		// Apply migrations
-		if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-			log.Fatalf("Failed to apply migrations: %v", err)
-		}
-
-		fmt.Println("Migrations applied successfully!")
-	}
-
-	res, err := db.Query("SELECT tbl_name FROM sqlite_master WHERE type='table';")
-
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://"+c.DBMigrations,
+		c.SQLDriver,
+		driver,
+	)
 	if err != nil {
-		log.Fatalf("Failed to query: %v", err)
+		log.Fatalf("Failed to initialize migrate: %v", err)
 	}
-	for res.Next() {
-		// []string len: 5, cap: 5, ["type","name","tbl_name","rootpage","sql"]
-		cols, _ := res.Columns()
-		_ = cols
-		var tbl_name string
-		res.Scan(&tbl_name)
-		println(tbl_name)
-		_ = tbl_name
+
+	// Apply migrations
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("Failed to apply migrations: %v", err)
 	}
-	// res.Close()
-	_ = res
+
+	fmt.Println("Migrations applied successfully!")
+
+	// res, err := db.Query("SELECT tbl_name FROM sqlite_master WHERE type='table';")
+
+	// if err != nil {
+	// 	log.Fatalf("Failed to query: %v", err)
+	// }
+	// for res.Next() {
+	// 	// []string len: 5, cap: 5, ["type","name","tbl_name","rootpage","sql"]
+	// 	cols, _ := res.Columns()
+	// 	_ = cols
+	// 	var tbl_name string
+	// 	res.Scan(&tbl_name)
+	// 	println(tbl_name)
+	// 	_ = tbl_name
+	// }
+	// // res.Close()
+	// _ = res
 	fmt.Println("Starting server")
 
 	dbRepo := repo.NewDatabaseRepo(db)
