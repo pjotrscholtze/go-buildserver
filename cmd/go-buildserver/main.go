@@ -93,16 +93,15 @@ func main() {
 	}
 	db, err := sqlx.Open(c.SQLDriver, c.SQLConnectionString)
 
-	db.SetConnMaxIdleTime(-1)
-	db.SetConnMaxLifetime(-1)
-	// db.SetMaxIdleConns(-1)
-	db.SetMaxOpenConns(1)
-
 	if err != nil {
 		log.Println("Failed to create SQL connection!")
 		log.Panic(err)
 		return
 	}
+	db.SetConnMaxIdleTime(-1)
+	db.SetConnMaxLifetime(-1)
+	// db.SetMaxIdleConns(-1)
+	db.SetMaxOpenConns(1)
 	defer db.Close()
 
 	if err := db.Ping(); err != nil {
@@ -126,20 +125,11 @@ func main() {
 
 	fmt.Println("Migrations applied successfully!")
 
-	if c.SQLDriver != "sqlite3" {
-		db, _ = sqlx.Open(c.SQLDriver, c.SQLConnectionString)
-
-		db.SetConnMaxIdleTime(-1)
-		db.SetConnMaxLifetime(-1)
-		// db.SetMaxIdleConns(-1)
-		db.SetMaxOpenConns(1)
-		if err := db.Ping(); err != nil {
-			log.Fatalf("Failed to ping the database: %v", err)
-		}
-	}
-
 	res, err := db.Query("SELECT tbl_name FROM sqlite_master WHERE type='table';")
 
+	if err != nil {
+		log.Fatalf("Failed to query: %v", err)
+	}
 	for res.Next() {
 		// []string len: 5, cap: 5, ["type","name","tbl_name","rootpage","sql"]
 		cols, _ := res.Columns()
@@ -151,6 +141,7 @@ func main() {
 	}
 	// res.Close()
 	_ = res
+	fmt.Println("Starting server")
 
 	dbRepo := repo.NewDatabaseRepo(db)
 	// res2, err := dbRepo.ListJobByStatus("pending")
