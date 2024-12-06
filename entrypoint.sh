@@ -4,4 +4,8 @@ mkdir -p /tmp/go-buildserver
 eval `ssh-agent`
 ssh-agent &
 
-/app/go-buildserver $CONFIG_PATH
+# With migrations
+# /app/go-buildserver 1 $CONFIG_PATH
+
+# Without migrations
+/app/go-buildserver 0 $CONFIG_PATH
