@@ -183,6 +183,7 @@ func (p *pipeline) Build(job *models.Job) {
 		"/bin/sh",
 		[]string{path.Join(repoPath, "boot.sh")},
 		func(pt process.PipeType, t time.Time, s string) {
+			fmt.Println("[%s] Job %d: (pipe: %d) %s", t.String(), job.ID, uint8(pt), s)
 			p.buildResultRepo.AddLine(job.ID, entity.NewBuildResultLine(s, pt, t))
 		})
 	p.buildResultRepo.SetStatus(job.ID, entity.FINISHED)
