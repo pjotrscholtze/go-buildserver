@@ -9,9 +9,9 @@ CREATE TABLE IF NOT EXISTS job(
 );
 
 CREATE TABLE IF NOT EXISTS buildresultline(
+	id           INTEGER      PRIMARY KEY AUTOINCREMENT NOT NULL,
 	jobid INT(11)     NOT NULL,
 	line  TEXT        NOT NULL,
 	pipe  VARCHAR(16) NOT NULL,
-	time  DATETIME    NOT NULL,
-    PRIMARY KEY (JobID, Time)
+	time  DATETIME    NOT NULL
 );
